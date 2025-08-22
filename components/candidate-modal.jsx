@@ -1,0 +1,348 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Card } from "@/components/ui/card";
+import { getPriorityBadge } from "@/lib/data";
+
+export default function CandidateModal({
+  candidate,
+  requisition,
+  isOpen,
+  onClose,
+  onSave,
+}) {
+  const [editedCandidate, setEditedCandidate] = useState(null);
+
+  // Initialize edited candidate when modal opens
+  useEffect(() => {
+    if (candidate && isOpen) {
+      setEditedCandidate({ ...candidate });
+    }
+  }, [candidate, isOpen]);
+
+  const handleSave = () => {
+    if (editedCandidate && onSave) {
+      onSave(editedCandidate);
+    }
+    onClose();
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
+  const formatDateTime = (dateString) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const getExperienceLevel = (years) => {
+    if (years <= 2) return "Junior";
+    if (years <= 5) return "Mid-level";
+    if (years <= 8) return "Senior";
+    return "Principal";
+  };
+
+  const getRatingStars = (rating) => {
+    return "★".repeat(rating) + "☆".repeat(5 - rating);
+  };
+
+  const getCurrentStageInfo = () => {
+    if (!candidate || !requisition) return null;
+    return requisition.hiring_stages.find(
+      (stage) => stage.id === candidate.current_stage,
+    );
+  };
+
+  const getSourceBadge = (source) => {
+    const colors = {
+      LinkedIn: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
+      "Company Website":
+        "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
+      Referral:
+        "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300",
+      Recruiter:
+        "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300",
+      AngelList:
+        "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300",
+      Dribbble: "bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-300",
+    };
+
+    return (
+      colors[source] ||
+      "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300"
+    );
+  };
+
+  if (!candidate || !editedCandidate) return null;
+
+  const currentStage = getCurrentStageInfo();
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-bold flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+              <span className="text-lg font-medium text-white">
+                {candidate.first_name.charAt(0)}
+                {candidate.last_name.charAt(0)}
+              </span>
+            </div>
+            {candidate.first_name} {candidate.last_name}
+          </DialogTitle>
+          <DialogDescription>
+            Candidate for {requisition?.title} • {candidate.current_title} at{" "}
+            {candidate.current_company}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-6">
+          {/* Status and Priority */}
+          <div className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+            <div className="flex items-center gap-2">
+              <Label className="text-sm font-medium">Current Stage:</Label>
+              <Badge variant="outline" className="capitalize">
+                {currentStage?.name ||
+                  candidate.current_stage.replace("_", " ")}
+              </Badge>
+            </div>
+            <div className="flex items-center gap-2">
+              <Label className="text-sm font-medium">Priority:</Label>
+              <span
+                className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getPriorityBadge(candidate.priority)}`}
+              >
+                {candidate.priority}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Label className="text-sm font-medium">Source:</Label>
+              <span
+                className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getSourceBadge(candidate.source)}`}
+              >
+                {candidate.source}
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Contact Information */}
+            <Card className="p-4">
+              <h3 className="text-lg font-semibold mb-4">
+                Contact Information
+              </h3>
+              <div className="space-y-3">
+                <div>
+                  <Label className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    Email
+                  </Label>
+                  <p className="text-sm">{candidate.email}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    Phone
+                  </Label>
+                  <p className="text-sm">{candidate.phone}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    Location
+                  </Label>
+                  <p className="text-sm">{candidate.location}</p>
+                </div>
+                {candidate.linkedin_url && (
+                  <div>
+                    <Label className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                      LinkedIn
+                    </Label>
+                    <a
+                      href={candidate.linkedin_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-blue-600 hover:underline"
+                    >
+                      View Profile
+                    </a>
+                  </div>
+                )}
+                {candidate.portfolio_url && (
+                  <div>
+                    <Label className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                      Portfolio
+                    </Label>
+                    <a
+                      href={candidate.portfolio_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-blue-600 hover:underline"
+                    >
+                      View Portfolio
+                    </a>
+                  </div>
+                )}
+              </div>
+            </Card>
+
+            {/* Professional Information */}
+            <Card className="p-4">
+              <h3 className="text-lg font-semibold mb-4">
+                Professional Information
+              </h3>
+              <div className="space-y-3">
+                <div>
+                  <Label className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    Current Company
+                  </Label>
+                  <p className="text-sm">{candidate.current_company}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    Current Title
+                  </Label>
+                  <p className="text-sm">{candidate.current_title}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    Experience
+                  </Label>
+                  <p className="text-sm">
+                    {getExperienceLevel(candidate.experience_years)} (
+                    {candidate.experience_years} years)
+                  </p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    Salary Expectation
+                  </Label>
+                  <p className="text-sm">{candidate.salary_expectation}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    Notice Period
+                  </Label>
+                  <p className="text-sm">{candidate.notice_period}</p>
+                </div>
+              </div>
+            </Card>
+          </div>
+
+          {/* Skills/Tags */}
+          {candidate.tags && candidate.tags.length > 0 && (
+            <Card className="p-4">
+              <h3 className="text-lg font-semibold mb-4">Skills & Tags</h3>
+              <div className="flex flex-wrap gap-2">
+                {candidate.tags.map((tag, index) => (
+                  <Badge key={index} variant="secondary" className="text-xs">
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+            </Card>
+          )}
+
+          {/* Interview History */}
+          {candidate.interviews && candidate.interviews.length > 0 && (
+            <Card className="p-4">
+              <h3 className="text-lg font-semibold mb-4">Interview History</h3>
+              <div className="space-y-4">
+                {candidate.interviews.map((interview, index) => (
+                  <div
+                    key={index}
+                    className="border-l-2 border-blue-500 pl-4 py-2"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-medium capitalize">
+                        {interview.type.replace("_", " ")} Interview
+                      </h4>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-500">
+                          {formatDateTime(interview.date)}
+                        </span>
+                        <span className="text-sm">
+                          {getRatingStars(interview.rating)}
+                        </span>
+                      </div>
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                      Interviewer: {interview.interviewer}
+                    </p>
+                    <p className="text-sm">{interview.feedback}</p>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
+
+          {/* Notes */}
+          <Card className="p-4">
+            <h3 className="text-lg font-semibold mb-4">Notes</h3>
+            <Textarea
+              value={editedCandidate.notes || ""}
+              onChange={(e) =>
+                setEditedCandidate({
+                  ...editedCandidate,
+                  notes: e.target.value,
+                })
+              }
+              className="min-h-[100px]"
+              placeholder="Add notes about this candidate..."
+            />
+          </Card>
+
+          {/* Timeline */}
+          <Card className="p-4">
+            <h3 className="text-lg font-semibold mb-4">Timeline</h3>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-600 dark:text-gray-400">
+                  Applied:
+                </span>
+                <span>{formatDate(candidate.applied_date)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600 dark:text-gray-400">
+                  Last Updated:
+                </span>
+                <span>{formatDateTime(candidate.updated_at)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600 dark:text-gray-400">
+                  Record Created:
+                </span>
+                <span>{formatDateTime(candidate.created_at)}</span>
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        <DialogFooter className="gap-2">
+          <Button variant="outline" onClick={onClose}>
+            Close
+          </Button>
+          <Button onClick={handleSave}>Save Changes</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}

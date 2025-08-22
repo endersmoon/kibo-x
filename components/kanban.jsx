@@ -8,26 +8,26 @@ import {
   useMemo,
   useRef,
   useState,
-} from 'react';
-import { createPortal } from 'react-dom';
+} from "react";
+import { createPortal } from "react-dom";
 
-import { Button, buttonVariants } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Textarea } from '@/components/ui/textarea';
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '@/components/ui/tooltip';
-import { cn } from '@/lib/utils';
+} from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 
 export const KanbanBoardContext = createContext(undefined);
 
 function useDndMonitor(monitor) {
   const context = useContext(KanbanBoardContext);
   if (!context) {
-    throw new Error('useDndMonitor must be used within a DndMonitorProvider');
+    throw new Error("useDndMonitor must be used within a DndMonitorProvider");
   }
 
   const { registerMonitor, unregisterMonitor } = context;
@@ -44,33 +44,48 @@ export function useDndEvents() {
   const context = useContext(KanbanBoardContext);
 
   if (!context) {
-    throw new Error('useDndEvents must be used within a DndMonitorProvider');
+    throw new Error("useDndEvents must be used within a DndMonitorProvider");
   }
 
   const { activeIdRef, draggableDescribedById, triggerEvent } = context;
 
-  const onDragStart = useCallback((activeId) => {
-    activeIdRef.current = activeId;
-    triggerEvent('onDragStart', activeId);
-  }, [triggerEvent, activeIdRef]);
+  const onDragStart = useCallback(
+    (activeId) => {
+      activeIdRef.current = activeId;
+      triggerEvent("onDragStart", activeId);
+    },
+    [triggerEvent, activeIdRef],
+  );
 
-  const onDragMove = useCallback((activeId, overId) => {
-    triggerEvent('onDragMove', activeId, overId);
-  }, [triggerEvent]);
+  const onDragMove = useCallback(
+    (activeId, overId) => {
+      triggerEvent("onDragMove", activeId, overId);
+    },
+    [triggerEvent],
+  );
 
-  const onDragOver = useCallback((activeId, overId) => {
-    // If the activeId is not provided, use the activeId from the ref.
-    const actualActiveId = activeId || activeIdRef.current;
-    triggerEvent('onDragOver', actualActiveId, overId);
-  }, [triggerEvent, activeIdRef]);
+  const onDragOver = useCallback(
+    (activeId, overId) => {
+      // If the activeId is not provided, use the activeId from the ref.
+      const actualActiveId = activeId || activeIdRef.current;
+      triggerEvent("onDragOver", actualActiveId, overId);
+    },
+    [triggerEvent, activeIdRef],
+  );
 
-  const onDragEnd = useCallback((activeId, overId) => {
-    triggerEvent('onDragEnd', activeId, overId);
-  }, [triggerEvent]);
+  const onDragEnd = useCallback(
+    (activeId, overId) => {
+      triggerEvent("onDragEnd", activeId, overId);
+    },
+    [triggerEvent],
+  );
 
-  const onDragCancel = useCallback((activeId) => {
-    triggerEvent('onDragCancel', activeId);
-  }, [triggerEvent]);
+  const onDragCancel = useCallback(
+    (activeId) => {
+      triggerEvent("onDragCancel", activeId);
+    },
+    [triggerEvent],
+  );
 
   return {
     draggableDescribedById,
@@ -113,7 +128,7 @@ export const defaultAnnouncements = {
 
 export function KanbanBoardLiveRegion({
   announcement,
-  ariaLiveType = 'assertive',
+  ariaLiveType = "assertive",
   className,
   id,
   ref,
@@ -124,34 +139,29 @@ export function KanbanBoardLiveRegion({
       aria-live={ariaLiveType}
       aria-atomic
       className={cn(
-        'clip-[rect(0_0_0_0)] clip-path-[inset(100%)] fixed top-0 left-0 -m-px h-px w-px overflow-hidden border-0 p-0 whitespace-nowrap',
-        className
+        "clip-[rect(0_0_0_0)] clip-path-[inset(100%)] fixed top-0 left-0 -m-px h-px w-px overflow-hidden border-0 p-0 whitespace-nowrap",
+        className,
       )}
       id={id}
       ref={ref}
       role="status"
-      {...props}>
+      {...props}
+    >
       {announcement}
     </div>
   );
 }
 
-export function KanbanBoardHiddenText({
-  id,
-  value,
-  className,
-  ref,
-  ...props
-}) {
+export function KanbanBoardHiddenText({ id, value, className, ref, ...props }) {
   return (
-    <div id={id} className={cn('hidden', className)} ref={ref} {...props}>
+    <div id={id} className={cn("hidden", className)} ref={ref} {...props}>
       {value}
     </div>
   );
 }
 
 export function useAnnouncement() {
-  const [announcement, setAnnouncement] = useState('');
+  const [announcement, setAnnouncement] = useState("");
   const announce = useCallback((value) => {
     if (value != undefined) {
       setAnnouncement(value);
@@ -160,7 +170,7 @@ export function useAnnouncement() {
 
   return {
     announce,
-    announcement
+    announcement,
   };
 }
 
@@ -168,7 +178,7 @@ export const KanbanBoardAccessibility = ({
   announcements = defaultAnnouncements,
   container,
   hiddenTextDescribedById,
-  screenReaderInstructions = defaultScreenReaderInstructions
+  screenReaderInstructions = defaultScreenReaderInstructions,
 }) => {
   const { announce, announcement } = useAnnouncement();
   const liveRegionId = useId();
@@ -178,25 +188,30 @@ export const KanbanBoardAccessibility = ({
     setMounted(true);
   }, []);
 
-  useDndMonitor(useMemo(() => ({
-    onDragStart(activeId) {
-      announce(announcements.onDragStart(activeId));
-    },
-    onDragMove(activeId, overId) {
-      if (announcements.onDragMove) {
-        announce(announcements.onDragMove(activeId, overId));
-      }
-    },
-    onDragOver(activeId, overId) {
-      announce(announcements.onDragOver(activeId, overId));
-    },
-    onDragEnd(activeId, overId) {
-      announce(announcements.onDragEnd(activeId, overId));
-    },
-    onDragCancel(activeId) {
-      announce(announcements.onDragCancel(activeId));
-    },
-  }), [announce, announcements]));
+  useDndMonitor(
+    useMemo(
+      () => ({
+        onDragStart(activeId) {
+          announce(announcements.onDragStart(activeId));
+        },
+        onDragMove(activeId, overId) {
+          if (announcements.onDragMove) {
+            announce(announcements.onDragMove(activeId, overId));
+          }
+        },
+        onDragOver(activeId, overId) {
+          announce(announcements.onDragOver(activeId, overId));
+        },
+        onDragEnd(activeId, overId) {
+          announce(announcements.onDragEnd(activeId, overId));
+        },
+        onDragCancel(activeId) {
+          announce(announcements.onDragCancel(activeId));
+        },
+      }),
+      [announce, announcements],
+    ),
+  );
 
   if (!mounted) {
     return null;
@@ -204,7 +219,10 @@ export const KanbanBoardAccessibility = ({
 
   const markup = (
     <>
-      <KanbanBoardHiddenText id={hiddenTextDescribedById} value={screenReaderInstructions} />
+      <KanbanBoardHiddenText
+        id={hiddenTextDescribedById}
+        value={screenReaderInstructions}
+      />
       <KanbanBoardLiveRegion id={liveRegionId} announcement={announcement} />
     </>
   );
@@ -216,7 +234,7 @@ export const KanbanBoardProvider = ({
   announcements,
   screenReaderInstructions,
   container,
-  children
+  children,
 }) => {
   const draggableDescribedById = useId();
   const monitorsReference = useRef([]);
@@ -228,14 +246,16 @@ export const KanbanBoardProvider = ({
   // restriction in the HTML5 Drag and Drop API - you cannot access the data
   // during the dragover event, only during the drop event.
   // @see https://developer.mozilla.org/en-US/docs/Web/API/DataTransfer
-  const activeIdReference = useRef('');
+  const activeIdReference = useRef("");
 
   const registerMonitor = useCallback((monitor) => {
     monitorsReference.current.push(monitor);
   }, []);
 
   const unregisterMonitor = useCallback((monitor) => {
-    monitorsReference.current = monitorsReference.current.filter(m => m !== monitor);
+    monitorsReference.current = monitorsReference.current.filter(
+      (m) => m !== monitor,
+    );
   }, []);
 
   const triggerEvent = useCallback((eventType, activeId, overId) => {
@@ -247,19 +267,22 @@ export const KanbanBoardProvider = ({
     }
   }, []);
 
-  const contextValue = useMemo(() => ({
-    activeIdRef: activeIdReference,
-    draggableDescribedById,
-    registerMonitor,
-    unregisterMonitor,
-    triggerEvent,
-  }), [
-    activeIdReference,
-    draggableDescribedById,
-    registerMonitor,
-    unregisterMonitor,
-    triggerEvent,
-  ]);
+  const contextValue = useMemo(
+    () => ({
+      activeIdRef: activeIdReference,
+      draggableDescribedById,
+      registerMonitor,
+      unregisterMonitor,
+      triggerEvent,
+    }),
+    [
+      activeIdReference,
+      draggableDescribedById,
+      registerMonitor,
+      unregisterMonitor,
+      triggerEvent,
+    ],
+  );
 
   return (
     <TooltipProvider>
@@ -269,7 +292,8 @@ export const KanbanBoardProvider = ({
           announcements={announcements}
           screenReaderInstructions={screenReaderInstructions}
           container={container}
-          hiddenTextDescribedById={draggableDescribedById} />
+          hiddenTextDescribedById={draggableDescribedById}
+        />
       </KanbanBoardContext.Provider>
     </TooltipProvider>
   );
@@ -284,42 +308,41 @@ Constants
  * @see https://developer.mozilla.org/en-US/docs/Web/API/DataTransfer
  */
 const DATA_TRANSFER_TYPES = {
-  CARD: 'kanban-board-card',
+  CARD: "kanban-board-card",
 };
 
 const KANBAN_BOARD_CIRCLE_COLORS_MAP = {
-  primary: 'bg-kanban-board-circle-primary',
-  gray: 'bg-kanban-board-circle-gray',
-  red: 'bg-kanban-board-circle-red',
-  yellow: 'bg-kanban-board-circle-yellow',
-  green: 'bg-kanban-board-circle-green',
-  cyan: 'bg-kanban-board-circle-cyan',
-  blue: 'bg-kanban-board-circle-blue',
-  indigo: 'bg-kanban-board-circle-indigo',
-  violet: 'bg-kanban-board-circle-violet',
-  purple: 'bg-kanban-board-circle-purple',
-  pink: 'bg-kanban-board-circle-pink',
+  primary: "bg-kanban-board-circle-primary",
+  gray: "bg-kanban-board-circle-gray",
+  red: "bg-kanban-board-circle-red",
+  yellow: "bg-kanban-board-circle-yellow",
+  green: "bg-kanban-board-circle-green",
+  cyan: "bg-kanban-board-circle-cyan",
+  blue: "bg-kanban-board-circle-blue",
+  indigo: "bg-kanban-board-circle-indigo",
+  violet: "bg-kanban-board-circle-violet",
+  purple: "bg-kanban-board-circle-purple",
+  pink: "bg-kanban-board-circle-pink",
 };
 
-export const KANBAN_BOARD_CIRCLE_COLORS = Object.keys(KANBAN_BOARD_CIRCLE_COLORS_MAP);
+export const KANBAN_BOARD_CIRCLE_COLORS = Object.keys(
+  KANBAN_BOARD_CIRCLE_COLORS_MAP,
+);
 
 /*
 Board
 */
 
-export function KanbanBoard({
-  className,
-  ref,
-  ...props
-}) {
+export function KanbanBoard({ className, ref, ...props }) {
   return (
     <div
       className={cn(
-        'flex h-full flex-grow items-start gap-x-2 overflow-x-auto py-1',
-        className
+        "flex h-full flex-grow items-start gap-x-2 overflow-x-auto py-1",
+        className,
       )}
       ref={ref}
-      {...props} />
+      {...props}
+    />
   );
 }
 
@@ -327,16 +350,18 @@ export function KanbanBoard({
  * Add some extra margin to the right of the container to allow for scrolling
  * when adding a new column.
  */
-export function KanbanBoardExtraMargin({
-  className,
-  ref,
-  ...props
-}) {
-  return (<div className={cn('h-1 w-8 flex-shrink-0', className)} ref={ref} {...props} />);
+export function KanbanBoardExtraMargin({ className, ref, ...props }) {
+  return (
+    <div
+      className={cn("h-1 w-8 flex-shrink-0", className)}
+      ref={ref}
+      {...props}
+    />
+  );
 }
 
 export const kanbanBoardColumnClassNames =
-  'w-64 flex-shrink-0 rounded-lg border flex flex-col border-border bg-sidebar py-2 max-h-full';
+  "w-64 flex-shrink-0 rounded-lg border flex flex-col border-border bg-sidebar py-2 max-h-full";
 
 export function KanbanBoardColumn({
   className,
@@ -351,115 +376,108 @@ export function KanbanBoardColumn({
   return (
     <section
       aria-labelledby={`column-${columnId}-title`}
-      className={cn(kanbanBoardColumnClassNames, isDropTarget && 'border-primary', className)}
+      className={cn(
+        kanbanBoardColumnClassNames,
+        isDropTarget && "border-primary",
+        className,
+      )}
       onDragLeave={() => {
         setIsDropTarget(false);
       }}
-      onDragOver={event => {
+      onDragOver={(event) => {
         if (event.dataTransfer.types.includes(DATA_TRANSFER_TYPES.CARD)) {
           event.preventDefault();
           setIsDropTarget(true);
-          onDragOver('', columnId);
+          onDragOver("", columnId);
         }
       }}
-      onDrop={event => {
+      onDrop={(event) => {
         const data = event.dataTransfer.getData(DATA_TRANSFER_TYPES.CARD);
         onDropOverColumn?.(data);
         onDragEnd(JSON.parse(data).id, columnId);
         setIsDropTarget(false);
       }}
       ref={ref}
-      {...props} />
+      {...props}
+    />
   );
 }
 
 export function KanbanBoardColumnSkeleton() {
   return (
-    <section className={cn(kanbanBoardColumnClassNames, 'h-full py-0')}>
+    <section className={cn(kanbanBoardColumnClassNames, "h-full py-0")}>
       <Skeleton className="h-full w-full" />
     </section>
   );
 }
 
-export function KanbanBoardColumnHeader({
-  className,
-  ref,
-  ...props
-}) {
+export function KanbanBoardColumnHeader({ className, ref, ...props }) {
   return (
     <div
-      className={cn('flex items-center justify-between px-2 py-1', className)}
+      className={cn("flex items-center justify-between px-2 py-1", className)}
       ref={ref}
-      {...props} />
+      {...props}
+    />
   );
 }
 
-export function KanbanBoardColumnTitle({
-  className,
-  columnId,
-  ref,
-  ...props
-}) {
+export function KanbanBoardColumnTitle({ className, columnId, ref, ...props }) {
   return (
     <h2
       className={cn(
-        'text-muted-foreground inline-flex items-center text-sm font-medium',
-        className
+        "text-muted-foreground inline-flex items-center text-sm font-medium",
+        className,
       )}
       ref={ref}
       id={`column-${columnId}-title`}
-      {...props} />
+      {...props}
+    />
   );
 }
 
-export function KanbanBoardColumnIconButton({
-  className,
-  ref,
-  ...props
-}) {
+export function KanbanBoardColumnIconButton({ className, ref, ...props }) {
   return (
     <Button
-      className={cn('text-muted-foreground size-6', className)}
+      className={cn("text-muted-foreground size-6", className)}
       variant="ghost"
       size="icon"
       ref={ref}
-      {...props} />
+      {...props}
+    />
   );
 }
 
 export function KanbanColorCircle({
   className,
-  color = 'primary',
+  color = "primary",
   ref,
   ...props
 }) {
   return (
     <div
       className={cn(
-        'mr-2 size-2 rounded-full',
+        "mr-2 size-2 rounded-full",
         KANBAN_BOARD_CIRCLE_COLORS_MAP[color],
-        className
+        className,
       )}
       ref={ref}
-      {...props} />
+      {...props}
+    />
   );
 }
 
-export function KanbanBoardColumnList({
-  className,
-  ref,
-  ...props
-}) {
+export function KanbanBoardColumnList({ className, ref, ...props }) {
   return (
     <ul
-      className={cn('min-h-0.5 flex-grow overflow-y-auto', className)}
+      className={cn("min-h-0.5 flex-grow overflow-y-auto", className)}
       ref={ref}
-      {...props} />
+      {...props}
+    />
   );
 }
 
 export const kanbanBoardColumnListItemClassNames =
-  '-mb-[2px] border-b-2 border-t-2 border-b-transparent border-t-transparent px-2 py-1 last:mb-0';
+  "-mb-[2px] border-b-2 border-t-2 border-b-transparent border-t-transparent px-2 py-1 last:mb-0";
 
 export function KanbanBoardColumnListItem({
   cardId,
@@ -468,77 +486,71 @@ export function KanbanBoardColumnListItem({
   ref,
   ...props
 }) {
-  const [dropDirection, setDropDirection] =
-    useState('none');
+  const [dropDirection, setDropDirection] = useState("none");
   const { onDragOver, onDragEnd } = useDndEvents();
 
   return (
     <li
       className={cn(
         kanbanBoardColumnListItemClassNames,
-        dropDirection === 'top' && 'border-t-primary',
-        dropDirection === 'bottom' && 'border-b-primary',
-        className
+        dropDirection === "top" && "border-t-primary",
+        dropDirection === "bottom" && "border-b-primary",
+        className,
       )}
       onDragLeave={() => {
-        setDropDirection('none');
+        setDropDirection("none");
       }}
-      onDragOver={event => {
+      onDragOver={(event) => {
         if (event.dataTransfer.types.includes(DATA_TRANSFER_TYPES.CARD)) {
           event.preventDefault();
           event.stopPropagation();
           const rect = event.currentTarget.getBoundingClientRect();
           const midpoint = (rect.top + rect.bottom) / 2;
-          setDropDirection(event.clientY <= midpoint ? 'top' : 'bottom');
-          onDragOver('', cardId);
+          setDropDirection(event.clientY <= midpoint ? "top" : "bottom");
+          onDragOver("", cardId);
         }
       }}
-      onDrop={event => {
+      onDrop={(event) => {
         event.stopPropagation();
         const data = event.dataTransfer.getData(DATA_TRANSFER_TYPES.CARD);
         onDropOverListItem?.(data, dropDirection);
 
         onDragEnd(JSON.parse(data).id, cardId);
-        setDropDirection('none');
+        setDropDirection("none");
       }}
       ref={ref}
-      {...props} />
+      {...props}
+    />
   );
 }
 
-export function KanbanBoardColumnFooter({
-  className,
-  ref,
-  ...props
-}) {
+export function KanbanBoardColumnFooter({ className, ref, ...props }) {
   return (
     <div
-      className={cn('flex items-center justify-between px-2 pt-1', className)}
+      className={cn("flex items-center justify-between px-2 pt-1", className)}
       ref={ref}
-      {...props} />
+      {...props}
+    />
   );
 }
 
-export function KanbanBoardColumnButton({
-  className,
-  ref,
-  ...props
-}) {
+export function KanbanBoardColumnButton({ className, ref, ...props }) {
   return (
     <Button
       className={cn(
-        'bg-sidebar text-primary hover:text-primary/80 w-full justify-start',
-        className
+        "bg-sidebar text-primary hover:text-primary/80 w-full justify-start",
+        className,
       )}
       variant="outline"
       size="sm"
       ref={ref}
-      {...props} />
+      {...props}
+    />
   );
 }
 
 const kanbanBoardCardClassNames =
-  'rounded-lg border border-border bg-background p-3 text-start text-foreground shadow-sm';
+  "rounded-lg border border-border bg-background p-3 text-start text-foreground shadow-sm";
 
 export function KanbanBoardCard({
   className,
@@ -556,18 +568,21 @@ export function KanbanBoardCard({
       aria-roledescription="draggable"
       className={cn(
         kanbanBoardCardClassNames,
-        'focus-visible:ring-ring inline-flex w-full cursor-grab touch-manipulation flex-col gap-1 focus-visible:ring-1 focus-visible:outline-none',
+        "focus-visible:ring-ring inline-flex w-full cursor-grab touch-manipulation flex-col gap-1 focus-visible:ring-1 focus-visible:outline-none",
         isDragging
-          ? 'cursor-grabbing active:cursor-grabbing'
-          : 'group relative',
-        isActive && 'rotate-1 transform shadow-lg',
-        className
+          ? "cursor-grabbing active:cursor-grabbing"
+          : "group relative",
+        isActive && "rotate-1 transform shadow-lg",
+        className,
       )}
       draggable
-      onDragStart={event => {
+      onDragStart={(event) => {
         setIsDragging(true);
-        event.dataTransfer.effectAllowed = 'move';
-        event.dataTransfer.setData(DATA_TRANSFER_TYPES.CARD, JSON.stringify(data));
+        event.dataTransfer.effectAllowed = "move";
+        event.dataTransfer.setData(
+          DATA_TRANSFER_TYPES.CARD,
+          JSON.stringify(data),
+        );
         // Remove outline from the card when dragging.
         event.currentTarget.blur();
 
@@ -577,28 +592,27 @@ export function KanbanBoardCard({
         setIsDragging(false);
       }}
       ref={ref}
-      {...props} />
+      {...props}
+    />
   );
 }
 
-export function KanbanBoardCardTitle({
-  className,
-  ref,
-  ...props
-}) {
-  return (<h3 className={cn('text-sm font-medium', className)} ref={ref} {...props} />);
+export function KanbanBoardCardTitle({ className, ref, ...props }) {
+  return (
+    <h3 className={cn("text-sm font-medium", className)} ref={ref} {...props} />
+  );
 }
 
-export function KanbanBoardCardDescription({
-  className,
-  ref,
-  ...props
-}) {
+export function KanbanBoardCardDescription({ className, ref, ...props }) {
   return (
     <p
-      className={cn('text-card-foreground text-xs leading-5 whitespace-pre-wrap', className)}
+      className={cn(
+        "text-card-foreground text-xs leading-5 whitespace-pre-wrap",
+        className,
+      )}
       ref={ref}
-      {...props} />
+      {...props}
+    />
   );
 }
 
@@ -617,7 +631,7 @@ export function KanbanBoardCardTextarea({
    */
   const adjustTextareaHeight = () => {
     if (internalReference.current) {
-      internalReference.current.style.height = 'auto'; // Reset height to recalculate.
+      internalReference.current.style.height = "auto"; // Reset height to recalculate.
       internalReference.current.style.height = `${internalReference.current.scrollHeight}px`;
     }
   };
@@ -633,7 +647,7 @@ export function KanbanBoardCardTextarea({
     // When the value is emptied, adjust the height of the textarea. This
     // prevents a bug where the text area is too short when the component
     // is emptied and had long text before being emptied.
-    if (value === '') {
+    if (value === "") {
       adjustTextareaHeight();
     }
   }, [value]);
@@ -650,14 +664,15 @@ export function KanbanBoardCardTextarea({
     <Textarea
       className={cn(
         kanbanBoardCardClassNames,
-        'min-h-min resize-none overflow-hidden text-xs leading-5',
-        className
+        "min-h-min resize-none overflow-hidden text-xs leading-5",
+        className,
       )}
       onChange={handleChange}
       rows={1}
       value={value}
       ref={internalReference}
-      {...props} />
+      {...props}
+    />
   );
 }
 
@@ -671,11 +686,12 @@ export function KanbanBoardCardButtonGroup({
     <div
       ref={ref}
       className={cn(
-        'bg-background absolute top-2.5 right-2.5 z-40 hidden items-center',
-        !disabled && 'group-focus-within:flex group-hover:flex',
-        className
+        "bg-background absolute top-2.5 right-2.5 z-40 hidden items-center",
+        !disabled && "group-focus-within:flex group-hover:flex",
+        className,
       )}
-      {...props} />
+      {...props}
+    />
   );
 }
 
@@ -697,7 +713,7 @@ export function KanbanBoardCardButton({
   // Handler for keydown events to emulate button behavior.
   const handleKeyDown = (event) => {
     // Check if the pressed key is 'Enter' or 'Space'.
-    if (event.key === 'Enter' || event.key === ' ') {
+    if (event.key === "Enter" || event.key === " ") {
       // Prevent default behavior (like scrolling on Space).
       event.preventDefault();
       // Prevent the event from bubbling up to parent elements.
@@ -711,15 +727,16 @@ export function KanbanBoardCardButton({
   const button = (
     <div
       className={cn(
-        buttonVariants({ size: 'icon', variant: 'ghost' }),
-        'border-border size-5 border hover:cursor-default [&_svg]:size-3.5',
-        className
+        buttonVariants({ size: "icon", variant: "ghost" }),
+        "border-border size-5 border hover:cursor-default [&_svg]:size-3.5",
+        className,
       )}
       onKeyDown={handleKeyDown}
       role="button"
       tabIndex={0}
       ref={internalReference}
-      {...props} />
+      {...props}
+    />
   );
 
   if (!tooltip) {
