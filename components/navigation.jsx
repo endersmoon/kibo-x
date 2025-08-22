@@ -10,6 +10,8 @@ import {
   Settings,
   FileText
 } from 'lucide-react';
+import { UserMenu } from '@/components/user-menu';
+import { AuthModal } from '@/components/auth-modal';
 import {
   Sidebar,
   SidebarContent,
@@ -85,14 +87,16 @@ export function SidebarLayout({ children }) {
       <SidebarProvider>
         <AppSidebar />
         <main className="flex-1 h-screen overflow-hidden flex flex-col">
-          <div className="flex h-16 items-center gap-4 border-b bg-background ">
+          <div className="flex h-16 items-center gap-4 border-b bg-background px-4">
             <SidebarTrigger />
             <div className="flex-1" />
+            <UserMenu />
           </div>
           <div className="flex-1 overflow-auto">
             {children}
           </div>
         </main>
+        <AuthModal />
       </SidebarProvider>
     </div>
   );

@@ -26,6 +26,14 @@ import {
   updateCandidatesAtom,
   openAddCandidateModalAtom
 } from "@/lib/atoms";
+import { 
+  UserPlus, 
+  Users, 
+  ArrowLeft,
+  Target,
+  Clock,
+  CheckCircle 
+} from "lucide-react";
 
 export default function CandidateKanban({
   requisition,
@@ -187,6 +195,64 @@ export default function CandidateKanban({
     updateCandidates(newCandidates);
   };
 
+  // Empty state for when requisition has no candidates
+  const EmptyKanbanState = () => (
+    <div className="flex flex-col items-center justify-center py-16 px-4 min-h-[50vh]">
+      <div className="max-w-md text-center">
+        {/* Icon */}
+        <div className="mx-auto w-20 h-20 bg-gradient-to-br from-purple-50 to-indigo-100 dark:from-purple-950 dark:to-indigo-900 rounded-full flex items-center justify-center mb-6">
+          <Users className="w-10 h-10 text-purple-600 dark:text-purple-400" />
+        </div>
+        
+        {/* Heading */}
+        <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+          No Candidates for {requisition.title}
+        </h3>
+        
+        {/* Description */}
+        <p className="text-gray-600 dark:text-gray-300 mb-8 leading-relaxed">
+          Start building your candidate pipeline by adding talented individuals to this {requisition.department} position.
+        </p>
+        
+        {/* Action Button */}
+        <Button 
+          onClick={() => openAddCandidateModal(requisition)}
+          size="lg"
+          className="mb-6"
+        >
+          <UserPlus className="w-5 h-5 mr-2" />
+          Add First Candidate
+        </Button>
+        
+        {/* Hiring stages preview */}
+        <div className="space-y-3">
+          <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">
+            Hiring stages for this position:
+          </p>
+          <div className="flex flex-wrap gap-2 justify-center">
+            {requisition.hiring_stages.slice(0, 4).map((stage, index) => (
+              <div 
+                key={stage.id}
+                className="flex items-center gap-2 px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-xs text-gray-600 dark:text-gray-400"
+              >
+                {index === 0 && <Target className="w-3 h-3" />}
+                {index === 1 && <Clock className="w-3 h-3" />}
+                {index === 2 && <Users className="w-3 h-3" />}
+                {index === 3 && <CheckCircle className="w-3 h-3" />}
+                <span>{stage.name}</span>
+              </div>
+            ))}
+            {requisition.hiring_stages.length > 4 && (
+              <div className="px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-xs text-gray-600 dark:text-gray-400">
+                +{requisition.hiring_stages.length - 4} more
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="h-full overflow-auto bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-900 dark:to-slate-800 p-6">
       <div className="max-w-7xl mx-auto">
@@ -195,7 +261,8 @@ export default function CandidateKanban({
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-4">
               <Button variant="outline" onClick={onBack}>
-                ← Back to Requisitions
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Requisitions
               </Button>
               <div className="flex items-center gap-2">
                 <span
@@ -230,10 +297,13 @@ export default function CandidateKanban({
           </div>
         </div>
 
-        {/* Kanban Board */}
-        <div className="h-[calc(100vh-250px)]">
-          <KanbanBoardProvider>
-            <KanbanBoard className="h-full">
+        {/* Kanban Board or Empty State */}
+        {candidates.length === 0 ? (
+          <EmptyKanbanState />
+        ) : (
+          <div className="h-[calc(100vh-250px)]">
+            <KanbanBoardProvider>
+              <KanbanBoard className="h-full">
               {requisition.hiring_stages.map((stage) => (
                 <KanbanBoardColumn
                   key={stage.id}
@@ -353,10 +423,11 @@ export default function CandidateKanban({
                   </KanbanBoardColumnList>
                 </KanbanBoardColumn>
               ))}
-              <KanbanBoardExtraMargin />
-            </KanbanBoard>
-          </KanbanBoardProvider>
-        </div>
+                <KanbanBoardExtraMargin />
+              </KanbanBoard>
+            </KanbanBoardProvider>
+          </div>
+        )}
       </div>
     </div>
   );

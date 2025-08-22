@@ -2,6 +2,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { SidebarLayout } from "@/components/navigation";
 import { JotaiProvider } from "@/components/providers/jotai-provider";
+import { FirebaseProvider } from "@/components/firebase-provider";
+import { AuthProvider } from "@/components/auth-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,9 +28,13 @@ export default function RootLayout({ children }) {
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <JotaiProvider>
-          <SidebarLayout>
-            {children}
-          </SidebarLayout>
+          <AuthProvider>
+            <FirebaseProvider>
+              <SidebarLayout>
+                {children}
+              </SidebarLayout>
+            </FirebaseProvider>
+          </AuthProvider>
         </JotaiProvider>
       </body>
     </html>

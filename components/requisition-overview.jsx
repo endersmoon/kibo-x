@@ -17,6 +17,15 @@ import {
   requisitionStatsAtom,
   openAddRequisitionModalAtom
 } from "@/lib/atoms";
+import { 
+  Plus, 
+  Briefcase, 
+  Users, 
+  FileText, 
+  ChevronRight,
+  Building,
+  MapPin
+} from "lucide-react";
 
 export default function RequisitionOverview({ onSelectRequisition, requisitions, candidates }) {
   const [activeTab, setActiveTab] = useState("all");
@@ -57,6 +66,85 @@ export default function RequisitionOverview({ onSelectRequisition, requisitions,
     if (activeTab === "all") return true;
     return req.status === activeTab;
   });
+
+  // Empty state for when there are no requisitions at all
+  const EmptyRequisitionsState = () => (
+    <div className="flex flex-col items-center justify-center py-16 px-4">
+      <div className="max-w-md text-center">
+        {/* Icon */}
+        <div className="mx-auto w-24 h-24 bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-950 dark:to-indigo-900 rounded-full flex items-center justify-center mb-6">
+          <Briefcase className="w-12 h-12 text-blue-600 dark:text-blue-400" />
+        </div>
+        
+        {/* Heading */}
+        <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">
+          No Job Requisitions Yet
+        </h3>
+        
+        {/* Description */}
+        <p className="text-gray-600 dark:text-gray-300 mb-8 leading-relaxed">
+          Start by creating your first job requisition to begin tracking candidates through your hiring process.
+        </p>
+        
+        {/* Action Button */}
+        <Button 
+          onClick={() => openAddRequisitionModal()}
+          size="lg"
+          className="mb-6"
+        >
+          <Plus className="w-5 h-5 mr-2" />
+          Create Your First Requisition
+        </Button>
+        
+        {/* Feature highlights */}
+        <div className="space-y-3 text-sm text-gray-500 dark:text-gray-400">
+          <div className="flex items-center justify-center gap-2">
+            <Building className="w-4 h-4" />
+            <span>Organize by department and location</span>
+          </div>
+          <div className="flex items-center justify-center gap-2">
+            <Users className="w-4 h-4" />
+            <span>Track candidates through hiring stages</span>
+          </div>
+          <div className="flex items-center justify-center gap-2">
+            <FileText className="w-4 h-4" />
+            <span>Manage hiring workflows efficiently</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Empty state for filtered results
+  const EmptyFilteredState = () => (
+    <div className="flex flex-col items-center justify-center py-12 px-4">
+      <div className="max-w-sm text-center">
+        {/* Icon */}
+        <div className="mx-auto w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
+          <FileText className="w-8 h-8 text-gray-400" />
+        </div>
+        
+        {/* Heading */}
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+          No requisitions match your filter
+        </h3>
+        
+        {/* Description */}
+        <p className="text-gray-600 dark:text-gray-300 mb-6">
+          Try adjusting your filter criteria or create a new requisition with the "{activeTab.replace("_", " ").toUpperCase()}" status.
+        </p>
+        
+        {/* Action Button */}
+        <Button 
+          onClick={() => openAddRequisitionModal()}
+          variant="outline"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Add New Requisition
+        </Button>
+      </div>
+    </div>
+  );
 
   return (
     <div className="h-full overflow-auto p-6">
@@ -346,13 +434,12 @@ export default function RequisitionOverview({ onSelectRequisition, requisitions,
           </Card>
         )}
 
-        {filteredRequisitions.length === 0 && (
-          <div className="text-center py-12">
-            <div className="text-gray-500 dark:text-gray-400">
-              No requisitions found for the selected filter.
-            </div>
-          </div>
-        )}
+        {/* Empty States */}
+        {requisitions.length === 0 ? (
+          <EmptyRequisitionsState />
+        ) : filteredRequisitions.length === 0 ? (
+          <EmptyFilteredState />
+        ) : null}
       </div>
     </div>
   );

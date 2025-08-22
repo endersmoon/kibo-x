@@ -14,7 +14,18 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { getPriorityBadge } from '@/lib/data';
-import { ExternalLink, Phone, Mail, MapPin, Plus } from 'lucide-react';
+import { 
+  ExternalLink, 
+  Phone, 
+  Mail, 
+  MapPin, 
+  Plus,
+  Users,
+  UserPlus,
+  Search,
+  Filter,
+  Briefcase
+} from 'lucide-react';
 import CandidateModal from '@/components/candidate-modal';
 import AddCandidateForm from '@/components/add-candidate-form';
 import {
@@ -128,6 +139,98 @@ export default function CandidatesPage() {
     }
   };
 
+  // Empty state for when there are no candidates at all
+  const EmptyCandidatesState = () => (
+    <div className="flex flex-col items-center justify-center py-16 px-4">
+      <div className="max-w-md text-center">
+        {/* Icon */}
+        <div className="mx-auto w-24 h-24 bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-950 dark:to-emerald-900 rounded-full flex items-center justify-center mb-6">
+          <Users className="w-12 h-12 text-green-600 dark:text-green-400" />
+        </div>
+        
+        {/* Heading */}
+        <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">
+          No Candidates Yet
+        </h3>
+        
+        {/* Description */}
+        <p className="text-gray-600 dark:text-gray-300 mb-8 leading-relaxed">
+          {requisitions.length === 0 
+            ? "Create job requisitions first, then start adding candidates to build your talent pipeline."
+            : "Start building your talent pipeline by adding candidates to your job requisitions."
+          }
+        </p>
+        
+        {/* Action Buttons */}
+        <div className="space-y-3">
+          {requisitions.length === 0 ? (
+            <Button size="lg" className="mb-4" disabled>
+              <UserPlus className="w-5 h-5 mr-2" />
+              Add Candidate (Create Requisition First)
+            </Button>
+          ) : (
+            <Button 
+              onClick={handleAddCandidateClick}
+              size="lg"
+              className="mb-4"
+            >
+              <UserPlus className="w-5 h-5 mr-2" />
+              Add Your First Candidate
+            </Button>
+          )}
+        </div>
+        
+        {/* Feature highlights */}
+        <div className="space-y-3 text-sm text-gray-500 dark:text-gray-400">
+          <div className="flex items-center justify-center gap-2">
+            <Search className="w-4 h-4" />
+            <span>Search and filter candidates easily</span>
+          </div>
+          <div className="flex items-center justify-center gap-2">
+            <Briefcase className="w-4 h-4" />
+            <span>Track progress through hiring stages</span>
+          </div>
+          <div className="flex items-center justify-center gap-2">
+            <Mail className="w-4 h-4" />
+            <span>Manage contact information and notes</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Empty state for filtered results
+  const EmptyFilteredCandidatesState = () => (
+    <div className="flex flex-col items-center justify-center py-12 px-4">
+      <div className="max-w-sm text-center">
+        {/* Icon */}
+        <div className="mx-auto w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
+          <Filter className="w-8 h-8 text-gray-400" />
+        </div>
+        
+        {/* Heading */}
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+          No candidates match your filters
+        </h3>
+        
+        {/* Description */}
+        <p className="text-gray-600 dark:text-gray-300 mb-6">
+          Try adjusting your filter criteria or add new candidates to the selected requisition.
+        </p>
+        
+        {/* Action Button */}
+        <Button 
+          onClick={handleAddCandidateClick}
+          variant="outline"
+          disabled={requisitions.length === 0}
+        >
+          <UserPlus className="w-4 h-4 mr-2" />
+          Add Candidate
+        </Button>
+      </div>
+    </div>
+  );
+
   return (
     <div className="h-full overflow-auto p-6">
       <div className="mb-6">
@@ -239,28 +342,33 @@ export default function CandidatesPage() {
         </CardContent>
       </Card>
 
-      {/* Candidates Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Candidates ({filteredCandidates.length})</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-auto max-h-[60vh] border-t">
-            <Table>
-              <TableHeader className="sticky top-0 bg-background">
-                <TableRow>
-                  <TableHead className="whitespace-nowrap">Name</TableHead>
-                  <TableHead className="whitespace-nowrap">Position</TableHead>
-                  <TableHead className="whitespace-nowrap">Stage</TableHead>
-                  <TableHead className="whitespace-nowrap">Priority</TableHead>
-                  <TableHead className="whitespace-nowrap">Experience</TableHead>
-                  <TableHead className="whitespace-nowrap">Location</TableHead>
-                  <TableHead className="whitespace-nowrap">Contact</TableHead>
-                  <TableHead className="whitespace-nowrap">Applied</TableHead>
-                  <TableHead className="whitespace-nowrap">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+      {/* Candidates Table or Empty States */}
+      {candidatesWithRequisition.length === 0 ? (
+        <EmptyCandidatesState />
+      ) : filteredCandidates.length === 0 ? (
+        <EmptyFilteredCandidatesState />
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle>Candidates ({filteredCandidates.length})</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="overflow-auto max-h-[60vh] border-t">
+              <Table>
+                <TableHeader className="sticky top-0 bg-background">
+                  <TableRow>
+                    <TableHead className="whitespace-nowrap">Name</TableHead>
+                    <TableHead className="whitespace-nowrap">Position</TableHead>
+                    <TableHead className="whitespace-nowrap">Stage</TableHead>
+                    <TableHead className="whitespace-nowrap">Priority</TableHead>
+                    <TableHead className="whitespace-nowrap">Experience</TableHead>
+                    <TableHead className="whitespace-nowrap">Location</TableHead>
+                    <TableHead className="whitespace-nowrap">Contact</TableHead>
+                    <TableHead className="whitespace-nowrap">Applied</TableHead>
+                    <TableHead className="whitespace-nowrap">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                 {filteredCandidates.map((candidate) => (
                   <TableRow 
                     key={candidate.id} 
@@ -365,16 +473,12 @@ export default function CandidatesPage() {
                     </TableCell>
                   </TableRow>
                 ))}
-              </TableBody>
-            </Table>
-          </div>
-          {filteredCandidates.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">
-              No candidates found matching the selected filters.
+                </TableBody>
+              </Table>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Candidate Modal */}
       {selectedCandidate && (
