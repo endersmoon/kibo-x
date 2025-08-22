@@ -76,21 +76,67 @@ export default function CandidateKanban({
     setCandidates(newCandidates);
   };
 
+  // Helper function to determine if we should create an interview record
+  const shouldCreateInterview = (currentStageId, newStageId, existingInterviews = []) => {
+    const stageIds = requisition.hiring_stages.map(stage => stage.id);
+    const currentIndex = stageIds.indexOf(currentStageId);
+    const newIndex = stageIds.indexOf(newStageId);
+    
+    // Check if an interview already exists for this stage
+    const hasExistingInterview = existingInterviews.some(interview => interview.type === newStageId);
+    if (hasExistingInterview) {
+      return false;
+    }
+    
+    // Create interview for forward progression
+    if (newIndex > currentIndex) {
+      return true;
+    }
+    
+    // Create interview for final states (rejected/hired) from any stage
+    if (['rejected', 'hired'].includes(newStageId)) {
+      return true;
+    }
+    
+    return false;
+  };
+
   const handleDropOverColumn = (data, columnId) => {
     const candidateData = JSON.parse(data);
 
     // Only update if the candidate is actually changing stages
     if (candidateData.current_stage === columnId) return;
 
-    const updatedCandidates = candidates.map((candidate) =>
-      candidate.id === candidateData.id
-        ? {
-            ...candidate,
-            current_stage: columnId,
-            updated_at: new Date().toISOString(),
-          }
-        : candidate,
-    );
+    // Find the stage information for the new column
+    const newStage = requisition.hiring_stages.find(stage => stage.id === columnId);
+    
+    const updatedCandidates = candidates.map((candidate) => {
+      if (candidate.id === candidateData.id) {
+        let updatedInterviews = candidate.interviews || [];
+
+        // Only create a new interview record if appropriate
+        if (shouldCreateInterview(candidateData.current_stage, columnId, candidate.interviews)) {
+          const newInterview = {
+            date: new Date().toISOString(),
+            type: columnId,
+            interviewer: "System", // Default interviewer, can be updated later
+            rating: 3, // Default rating, can be updated later
+            feedback: `Candidate moved to ${newStage?.name || columnId} stage`,
+          };
+
+          updatedInterviews = [...updatedInterviews, newInterview];
+        }
+
+        return {
+          ...candidate,
+          current_stage: columnId,
+          interviews: updatedInterviews,
+          updated_at: new Date().toISOString(),
+        };
+      }
+      return candidate;
+    });
+    
     updateCandidateData(updatedCandidates);
   };
 
@@ -121,6 +167,21 @@ export default function CandidateKanban({
       current_stage: targetCandidate.current_stage,
       updated_at: new Date().toISOString(),
     };
+
+    // If the candidate is changing stages and we should create an interview, add an interview record
+    if (candidateData.current_stage !== targetCandidate.current_stage && 
+        shouldCreateInterview(candidateData.current_stage, targetCandidate.current_stage, candidateData.interviews)) {
+      const newStage = requisition.hiring_stages.find(stage => stage.id === targetCandidate.current_stage);
+      const newInterview = {
+        date: new Date().toISOString(),
+        type: targetCandidate.current_stage,
+        interviewer: "System", // Default interviewer, can be updated later
+        rating: 3, // Default rating, can be updated later
+        feedback: `Candidate moved to ${newStage?.name || targetCandidate.current_stage} stage`,
+      };
+
+      updatedCandidate.interviews = [...(candidateData.interviews || []), newInterview];
+    }
 
     // Insert the candidate at the correct position
     const newCandidates = [...filteredCandidates];

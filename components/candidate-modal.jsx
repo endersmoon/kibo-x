@@ -16,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { getPriorityBadge } from "@/lib/data";
+import EditInterviewForm from "@/components/edit-interview-form";
 
 export default function CandidateModal({
   candidate,
@@ -38,6 +39,32 @@ export default function CandidateModal({
       onSave(editedCandidate);
     }
     onClose();
+  };
+
+
+
+  const handleDeleteInterview = (indexToDelete) => {
+    if (editedCandidate && editedCandidate.interviews) {
+      const updatedInterviews = editedCandidate.interviews.filter(
+        (_, index) => index !== indexToDelete
+      );
+      setEditedCandidate({
+        ...editedCandidate,
+        interviews: updatedInterviews,
+      });
+    }
+  };
+
+  const handleUpdateInterview = (interviewIndex, updatedInterview) => {
+    if (editedCandidate && editedCandidate.interviews) {
+      const updatedInterviews = editedCandidate.interviews.map((interview, index) =>
+        index === interviewIndex ? updatedInterview : interview
+      );
+      setEditedCandidate({
+        ...editedCandidate,
+        interviews: updatedInterviews,
+      });
+    }
   };
 
   const formatDate = (dateString) => {
@@ -263,37 +290,70 @@ export default function CandidateModal({
           )}
 
           {/* Interview History */}
-          {candidate.interviews && candidate.interviews.length > 0 && (
-            <Card className="p-4">
-              <h3 className="text-lg font-semibold mb-4">Interview History</h3>
-              <div className="space-y-4">
-                {candidate.interviews.map((interview, index) => (
-                  <div
-                    key={index}
-                    className="border-l-2 border-blue-500 pl-4 py-2"
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-medium capitalize">
-                        {interview.type.replace("_", " ")} Interview
-                      </h4>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-gray-500">
-                          {formatDateTime(interview.date)}
-                        </span>
-                        <span className="text-sm">
-                          {getRatingStars(interview.rating)}
-                        </span>
-                      </div>
-                    </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                      Interviewer: {interview.interviewer}
-                    </p>
-                    <p className="text-sm">{interview.feedback}</p>
-                  </div>
-                ))}
+          <Card className="p-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">Interview History</h3>
+              <div className="text-xs text-gray-500 dark:text-gray-400">
+                Interviews are automatically created when moving between stages
               </div>
-            </Card>
-          )}
+            </div>
+            {editedCandidate.interviews && editedCandidate.interviews.length > 0 ? (
+              <div className="space-y-4">
+                {editedCandidate.interviews.map((interview, index) => {
+                  // Find the stage information for this interview
+                  const stage = requisition?.hiring_stages?.find(s => s.id === interview.type);
+                  const stageName = stage?.name || interview.type.replace("_", " ");
+                  
+                  return (
+                    <div
+                      key={index}
+                      className="border-l-2 border-blue-500 pl-4 py-2 relative group"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-medium">
+                          {stageName}
+                        </h4>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-gray-500">
+                            {formatDateTime(interview.date)}
+                          </span>
+                          <span className="text-sm">
+                            {getRatingStars(interview.rating)}
+                          </span>
+                          <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                            <EditInterviewForm
+                              interview={interview}
+                              onUpdateInterview={(updatedInterview) => handleUpdateInterview(index, updatedInterview)}
+                              stageName={stageName}
+                            />
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteInterview(index)}
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950 px-2 py-1 h-6"
+                            >
+                              ×
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                        Interviewer: {interview.interviewer}
+                      </p>
+                      {interview.feedback && (
+                        <p className="text-sm">{interview.feedback}</p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                <p className="text-sm">No interviews recorded yet.</p>
+                <p className="text-xs mt-1">Interviews will be automatically created when moving the candidate between stages.</p>
+              </div>
+            )}
+          </Card>
 
           {/* Notes */}
           <Card className="p-4">
