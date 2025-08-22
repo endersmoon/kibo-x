@@ -13,8 +13,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { sampleCandidates, sampleRequisitions, getPriorityBadge } from '@/lib/data';
-import { ExternalLink, Phone, Mail, MapPin } from 'lucide-react';
+import { ExternalLink, Phone, Mail, MapPin, Plus } from 'lucide-react';
 import CandidateModal from '@/components/candidate-modal';
+import AddCandidateForm from '@/components/add-candidate-form';
 
 export default function CandidatesPage() {
   const [selectedPriority, setSelectedPriority] = useState('all');
@@ -22,6 +23,8 @@ export default function CandidatesPage() {
   const [selectedRequisition, setSelectedRequisition] = useState('all');
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAddCandidateOpen, setIsAddCandidateOpen] = useState(false);
+  const [selectedRequisitionForAdd, setSelectedRequisitionForAdd] = useState(null);
 
   // Get all candidates with requisition info
   const candidatesWithRequisition = sampleCandidates.map(candidate => {
@@ -88,13 +91,39 @@ export default function CandidatesPage() {
     // You could update the local state here if needed
   };
 
+  const handleAddCandidate = (newCandidate) => {
+    // In a real app, this would save to the database
+    console.log('Adding new candidate:', newCandidate);
+    // You could update the local state here if needed
+  };
+
+  const handleAddCandidateClick = () => {
+    // If a specific requisition is filtered, use that as default
+    if (selectedRequisition !== 'all') {
+      const requisition = sampleRequisitions.find(req => req.id === selectedRequisition);
+      setSelectedRequisitionForAdd(requisition);
+    } else {
+      // Default to the first requisition if none is selected
+      setSelectedRequisitionForAdd(sampleRequisitions[0]);
+    }
+    setIsAddCandidateOpen(true);
+  };
+
   return (
     <div className="h-full overflow-auto p-6">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold tracking-tight">All Candidates</h1>
-        <p className="text-muted-foreground">
-          View and manage all candidates across all requisitions
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">All Candidates</h1>
+            <p className="text-muted-foreground">
+              View and manage all candidates across all requisitions
+            </p>
+          </div>
+          <Button onClick={handleAddCandidateClick} className="flex items-center gap-2">
+            <Plus className="h-4 w-4" />
+            Add Candidate
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -338,6 +367,17 @@ export default function CandidatesPage() {
           isOpen={isModalOpen}
           onClose={handleCloseModal}
           onSave={handleSaveCandidate}
+        />
+      )}
+
+      {/* Add Candidate Form */}
+      {selectedRequisitionForAdd && (
+        <AddCandidateForm
+          requisition={selectedRequisitionForAdd}
+          allRequisitions={sampleRequisitions}
+          isOpen={isAddCandidateOpen}
+          onClose={() => setIsAddCandidateOpen(false)}
+          onSave={handleAddCandidate}
         />
       )}
     </div>

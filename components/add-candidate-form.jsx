@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Drawer,
   DrawerClose,
@@ -16,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 
-export default function AddCandidateForm({ isOpen, onClose, onSave, requisition }) {
+export default function AddCandidateForm({ isOpen, onClose, onSave, requisition, allRequisitions }) {
   const [formData, setFormData] = useState({
     first_name: "",
     last_name: "",
@@ -36,7 +36,18 @@ export default function AddCandidateForm({ isOpen, onClose, onSave, requisition 
     notice_period: "",
     notes: "",
     tags: [""],
+    selected_requisition_id: requisition?.id || "",
   });
+
+  // Update selected_requisition_id when requisition prop changes
+  useEffect(() => {
+    if (requisition?.id) {
+      setFormData(prev => ({
+        ...prev,
+        selected_requisition_id: requisition.id
+      }));
+    }
+  }, [requisition?.id]);
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
@@ -70,10 +81,14 @@ export default function AddCandidateForm({ isOpen, onClose, onSave, requisition 
   };
 
   const handleSave = () => {
+    const selectedRequisition = allRequisitions ? 
+      allRequisitions.find(req => req.id === formData.selected_requisition_id) : 
+      requisition;
+    
     const newCandidate = {
       ...formData,
       id: `cand-${Date.now()}`,
-      requisition_id: requisition.id,
+      requisition_id: selectedRequisition?.id || requisition?.id,
       applied_date: new Date().toISOString().split('T')[0],
       tags: formData.tags.filter(tag => tag.trim() !== ""),
       interviews: [],
@@ -103,12 +118,14 @@ export default function AddCandidateForm({ isOpen, onClose, onSave, requisition 
       notice_period: "",
       notes: "",
       tags: [""],
+      selected_requisition_id: requisition?.id || "",
     });
     
     onClose();
   };
 
-  const isFormValid = formData.first_name && formData.last_name && formData.email;
+  const isFormValid = formData.first_name && formData.last_name && formData.email && 
+    (allRequisitions ? formData.selected_requisition_id : true);
 
   const sourceOptions = [
     "Company Website",
@@ -130,7 +147,10 @@ export default function AddCandidateForm({ isOpen, onClose, onSave, requisition 
             Add New Candidate
           </DrawerTitle>
           <DrawerDescription>
-            Add a new candidate for {requisition?.title}
+            {allRequisitions ? 
+              "Add a new candidate to any requisition" : 
+              `Add a new candidate for ${requisition?.title}`
+            }
           </DrawerDescription>
         </DrawerHeader>
 
@@ -253,6 +273,23 @@ export default function AddCandidateForm({ isOpen, onClose, onSave, requisition 
           <Card className="p-4">
             <h3 className="text-lg font-semibold mb-4">Application Details</h3>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {allRequisitions && (
+                <div>
+                  <Label className="text-sm font-medium">Requisition *</Label>
+                  <select
+                    value={formData.selected_requisition_id}
+                    onChange={(e) => handleInputChange("selected_requisition_id", e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded-md"
+                  >
+                    <option value="">Select a requisition...</option>
+                    {allRequisitions.map(req => (
+                      <option key={req.id} value={req.id}>
+                        {req.title} - {req.department}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <div>
                 <Label className="text-sm font-medium">Current Stage</Label>
                 <select
@@ -260,11 +297,16 @@ export default function AddCandidateForm({ isOpen, onClose, onSave, requisition 
                   onChange={(e) => handleInputChange("current_stage", e.target.value)}
                   className="w-full p-2 border border-gray-300 rounded-md"
                 >
-                  {requisition?.hiring_stages.map(stage => (
+                  {(allRequisitions ? 
+                    allRequisitions.find(req => req.id === formData.selected_requisition_id)?.hiring_stages :
+                    requisition?.hiring_stages
+                  )?.map(stage => (
                     <option key={stage.id} value={stage.id}>
                       {stage.name}
                     </option>
-                  ))}
+                  )) || (
+                    <option value="applied">Applied</option>
+                  )}
                 </select>
               </div>
               <div>
