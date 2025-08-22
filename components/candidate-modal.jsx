@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { getPriorityBadge } from "@/lib/data";
 import EditInterviewForm from "@/components/edit-interview-form";
+import { Edit, Save, X } from "lucide-react";
 
 export default function CandidateModal({
   candidate,
@@ -26,19 +27,83 @@ export default function CandidateModal({
   onSave,
 }) {
   const [editedCandidate, setEditedCandidate] = useState(null);
+  const [isEditMode, setIsEditMode] = useState(false);
 
   // Initialize edited candidate when modal opens
   useEffect(() => {
     if (candidate && isOpen) {
       setEditedCandidate({ ...candidate });
+      setIsEditMode(false); // Reset edit mode when opening modal
     }
   }, [candidate, isOpen]);
 
   const handleSave = () => {
     if (editedCandidate && onSave) {
-      onSave(editedCandidate);
+      // Basic validation - only check email since first/last name are not editable
+      if (!editedCandidate.email?.trim()) {
+        alert("Email is a required field.");
+        return;
+      }
+
+      // Email format validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(editedCandidate.email.trim())) {
+        alert("Please enter a valid email address.");
+        return;
+      }
+
+      // Filter out empty tags
+      const filteredTags = (editedCandidate.tags || []).filter(tag => tag.trim() !== "");
+
+      // Update the updated_at timestamp
+      const updatedCandidate = {
+        ...editedCandidate,
+        tags: filteredTags,
+        updated_at: new Date().toISOString(),
+      };
+      onSave(updatedCandidate);
     }
+    setIsEditMode(false);
     onClose();
+  };
+
+  const handleEditToggle = () => {
+    setIsEditMode(!isEditMode);
+    if (isEditMode) {
+      // If canceling edit, reset to original candidate data
+      setEditedCandidate({ ...candidate });
+    }
+  };
+
+  const handleInputChange = (field, value) => {
+    setEditedCandidate(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleTagChange = (index, value) => {
+    const newTags = [...(editedCandidate.tags || [])];
+    newTags[index] = value;
+    setEditedCandidate(prev => ({
+      ...prev,
+      tags: newTags
+    }));
+  };
+
+  const addTag = () => {
+    setEditedCandidate(prev => ({
+      ...prev,
+      tags: [...(prev.tags || []), ""]
+    }));
+  };
+
+  const removeTag = (index) => {
+    const newTags = (editedCandidate.tags || []).filter((_, i) => i !== index);
+    setEditedCandidate(prev => ({
+      ...prev,
+      tags: newTags
+    }));
   };
 
 
@@ -131,19 +196,43 @@ export default function CandidateModal({
     <Drawer open={isOpen} onOpenChange={onClose} direction="right">
               <DrawerContent className="p-3 h-full overflow-y-auto w-auto min-w-[800px] max-w-[90vw]">
         <DrawerHeader>
-          <DrawerTitle className="text-2xl font-bold flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
-              <span className="text-lg font-medium text-white">
-                {candidate.first_name.charAt(0)}
-                {candidate.last_name.charAt(0)}
-              </span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                <span className="text-lg font-medium text-white">
+                  {candidate.first_name.charAt(0)}
+                  {candidate.last_name.charAt(0)}
+                </span>
+              </div>
+              <div>
+                <DrawerTitle className="text-2xl font-bold">
+                  {candidate.first_name} {candidate.last_name}
+                </DrawerTitle>
+                <DrawerDescription>
+                  Candidate for {requisition?.title} • {isEditMode ? (editedCandidate?.current_title || candidate.current_title) : candidate.current_title} at{" "}
+                  {isEditMode ? (editedCandidate?.current_company || candidate.current_company) : candidate.current_company}
+                </DrawerDescription>
+              </div>
             </div>
-            {candidate.first_name} {candidate.last_name}
-          </DrawerTitle>
-          <DrawerDescription>
-            Candidate for {requisition?.title} • {candidate.current_title} at{" "}
-            {candidate.current_company}
-          </DrawerDescription>
+            <Button
+              variant={isEditMode ? "destructive" : "outline"}
+              size="sm"
+              onClick={handleEditToggle}
+              className="flex items-center gap-2"
+            >
+              {isEditMode ? (
+                <>
+                  <X className="h-4 w-4" />
+                  Cancel
+                </>
+              ) : (
+                <>
+                  <Edit className="h-4 w-4" />
+                  Edit
+                </>
+              )}
+            </Button>
+          </div>
         </DrawerHeader>
 
         <div className="space-y-6 w-full">
@@ -185,25 +274,60 @@ export default function CandidateModal({
                   <Label className="text-sm font-medium text-gray-600 dark:text-gray-400">
                     Email
                   </Label>
-                  <p className="text-sm">{candidate.email}</p>
+                  {isEditMode ? (
+                    <input
+                      type="email"
+                      value={editedCandidate?.email || ""}
+                      onChange={(e) => handleInputChange("email", e.target.value)}
+                      className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                    />
+                  ) : (
+                    <p className="text-sm">{candidate.email}</p>
+                  )}
                 </div>
                 <div>
                   <Label className="text-sm font-medium text-gray-600 dark:text-gray-400">
                     Phone
                   </Label>
-                  <p className="text-sm">{candidate.phone}</p>
+                  {isEditMode ? (
+                    <input
+                      type="tel"
+                      value={editedCandidate?.phone || ""}
+                      onChange={(e) => handleInputChange("phone", e.target.value)}
+                      className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                    />
+                  ) : (
+                    <p className="text-sm">{candidate.phone}</p>
+                  )}
                 </div>
                 <div>
                   <Label className="text-sm font-medium text-gray-600 dark:text-gray-400">
                     Location
                   </Label>
-                  <p className="text-sm">{candidate.location}</p>
+                  {isEditMode ? (
+                    <input
+                      type="text"
+                      value={editedCandidate?.location || ""}
+                      onChange={(e) => handleInputChange("location", e.target.value)}
+                      className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                    />
+                  ) : (
+                    <p className="text-sm">{candidate.location}</p>
+                  )}
                 </div>
-                {candidate.linkedin_url && (
-                  <div>
-                    <Label className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                      LinkedIn
-                    </Label>
+                <div>
+                  <Label className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    LinkedIn
+                  </Label>
+                  {isEditMode ? (
+                    <input
+                      type="url"
+                      value={editedCandidate?.linkedin_url || ""}
+                      onChange={(e) => handleInputChange("linkedin_url", e.target.value)}
+                      className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                      placeholder="https://linkedin.com/in/username"
+                    />
+                  ) : candidate.linkedin_url ? (
                     <a
                       href={candidate.linkedin_url}
                       target="_blank"
@@ -212,13 +336,23 @@ export default function CandidateModal({
                     >
                       View Profile
                     </a>
-                  </div>
-                )}
-                {candidate.portfolio_url && (
-                  <div>
-                    <Label className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                      Portfolio
-                    </Label>
+                  ) : (
+                    <p className="text-sm text-gray-500">Not provided</p>
+                  )}
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    Portfolio
+                  </Label>
+                  {isEditMode ? (
+                    <input
+                      type="url"
+                      value={editedCandidate?.portfolio_url || ""}
+                      onChange={(e) => handleInputChange("portfolio_url", e.target.value)}
+                      className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                      placeholder="https://portfolio.com"
+                    />
+                  ) : candidate.portfolio_url ? (
                     <a
                       href={candidate.portfolio_url}
                       target="_blank"
@@ -227,8 +361,10 @@ export default function CandidateModal({
                     >
                       View Portfolio
                     </a>
-                  </div>
-                )}
+                  ) : (
+                    <p className="text-sm text-gray-500">Not provided</p>
+                  )}
+                </div>
               </div>
             </Card>
 
@@ -242,52 +378,131 @@ export default function CandidateModal({
                   <Label className="text-sm font-medium text-gray-600 dark:text-gray-400">
                     Current Company
                   </Label>
-                  <p className="text-sm">{candidate.current_company}</p>
+                  {isEditMode ? (
+                    <input
+                      type="text"
+                      value={editedCandidate?.current_company || ""}
+                      onChange={(e) => handleInputChange("current_company", e.target.value)}
+                      className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                    />
+                  ) : (
+                    <p className="text-sm">{candidate.current_company}</p>
+                  )}
                 </div>
                 <div>
                   <Label className="text-sm font-medium text-gray-600 dark:text-gray-400">
                     Current Title
                   </Label>
-                  <p className="text-sm">{candidate.current_title}</p>
+                  {isEditMode ? (
+                    <input
+                      type="text"
+                      value={editedCandidate?.current_title || ""}
+                      onChange={(e) => handleInputChange("current_title", e.target.value)}
+                      className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                    />
+                  ) : (
+                    <p className="text-sm">{candidate.current_title}</p>
+                  )}
                 </div>
                 <div>
                   <Label className="text-sm font-medium text-gray-600 dark:text-gray-400">
                     Experience
                   </Label>
-                  <p className="text-sm">
-                    {getExperienceLevel(candidate.experience_years)} (
-                    {candidate.experience_years} years)
-                  </p>
+                  {isEditMode ? (
+                    <input
+                      type="number"
+                      min="0"
+                      value={editedCandidate?.experience_years || 0}
+                      onChange={(e) => handleInputChange("experience_years", parseInt(e.target.value) || 0)}
+                      className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                    />
+                  ) : (
+                    <p className="text-sm">
+                      {getExperienceLevel(candidate.experience_years)} (
+                      {candidate.experience_years} years)
+                    </p>
+                  )}
                 </div>
                 <div>
                   <Label className="text-sm font-medium text-gray-600 dark:text-gray-400">
                     Salary Expectation
                   </Label>
-                  <p className="text-sm">{candidate.salary_expectation}</p>
+                  {isEditMode ? (
+                    <input
+                      type="text"
+                      value={editedCandidate?.salary_expectation || ""}
+                      onChange={(e) => handleInputChange("salary_expectation", e.target.value)}
+                      className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                      placeholder="$120,000"
+                    />
+                  ) : (
+                    <p className="text-sm">{candidate.salary_expectation}</p>
+                  )}
                 </div>
                 <div>
                   <Label className="text-sm font-medium text-gray-600 dark:text-gray-400">
                     Notice Period
                   </Label>
-                  <p className="text-sm">{candidate.notice_period}</p>
+                  {isEditMode ? (
+                    <input
+                      type="text"
+                      value={editedCandidate?.notice_period || ""}
+                      onChange={(e) => handleInputChange("notice_period", e.target.value)}
+                      className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                      placeholder="2 weeks"
+                    />
+                  ) : (
+                    <p className="text-sm">{candidate.notice_period}</p>
+                  )}
                 </div>
               </div>
             </Card>
           </div>
 
           {/* Skills/Tags */}
-          {candidate.tags && candidate.tags.length > 0 && (
-            <Card className="p-4">
-              <h3 className="text-lg font-semibold mb-4">Skills & Tags</h3>
-              <div className="flex flex-wrap gap-2">
-                {candidate.tags.map((tag, index) => (
-                  <Badge key={index} variant="secondary" className="text-xs">
-                    {tag}
-                  </Badge>
+          <Card className="p-4">
+            <h3 className="text-lg font-semibold mb-4">Skills & Tags</h3>
+            {isEditMode ? (
+              <div className="space-y-3">
+                {(editedCandidate?.tags || [""]).map((tag, index) => (
+                  <div key={index} className="flex gap-2">
+                    <input
+                      type="text"
+                      value={tag}
+                      onChange={(e) => handleTagChange(index, e.target.value)}
+                      className="flex-1 p-2 border border-gray-300 rounded-md text-sm"
+                      placeholder="react, typescript, senior-level"
+                    />
+                    {(editedCandidate?.tags || []).length > 1 && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => removeTag(index)}
+                        className="px-3"
+                      >
+                        Remove
+                      </Button>
+                    )}
+                  </div>
                 ))}
+                <Button variant="outline" onClick={addTag} className="text-sm">
+                  + Add Tag
+                </Button>
               </div>
-            </Card>
-          )}
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {candidate.tags && candidate.tags.length > 0 ? (
+                  candidate.tags.map((tag, index) => (
+                    <Badge key={index} variant="secondary" className="text-xs">
+                      {tag}
+                    </Badge>
+                  ))
+                ) : (
+                  <p className="text-sm text-gray-500">No tags added</p>
+                )}
+              </div>
+            )}
+          </Card>
 
           {/* Interview History */}
           <Card className="p-4">
@@ -398,10 +613,21 @@ export default function CandidateModal({
         </div>
 
         <DrawerFooter className="gap-2">
-          <Button onClick={handleSave}>Save Changes</Button>
-          <DrawerClose asChild>
-            <Button variant="outline">Close</Button>
-          </DrawerClose>
+          {isEditMode ? (
+            <>
+              <Button onClick={handleSave} className="flex items-center gap-2">
+                <Save className="h-4 w-4" />
+                Save Changes
+              </Button>
+              <Button variant="outline" onClick={handleEditToggle}>
+                Cancel
+              </Button>
+            </>
+          ) : (
+            <DrawerClose asChild>
+              <Button variant="outline">Close</Button>
+            </DrawerClose>
+          )}
         </DrawerFooter>
       </DrawerContent>
     </Drawer>

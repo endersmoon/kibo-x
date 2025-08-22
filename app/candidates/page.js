@@ -25,9 +25,10 @@ export default function CandidatesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAddCandidateOpen, setIsAddCandidateOpen] = useState(false);
   const [selectedRequisitionForAdd, setSelectedRequisitionForAdd] = useState(null);
+  const [candidates, setCandidates] = useState(sampleCandidates);
 
   // Get all candidates with requisition info
-  const candidatesWithRequisition = sampleCandidates.map(candidate => {
+  const candidatesWithRequisition = candidates.map(candidate => {
     const requisition = sampleRequisitions.find(req => req.id === candidate.requisition_id);
     return {
       ...candidate,
@@ -46,8 +47,8 @@ export default function CandidatesPage() {
   });
 
   // Get unique values for filters
-  const priorities = [...new Set(sampleCandidates.map(c => c.priority))];
-  const stages = [...new Set(sampleCandidates.map(c => c.current_stage))];
+  const priorities = [...new Set(candidates.map(c => c.priority))];
+  const stages = [...new Set(candidates.map(c => c.current_stage))];
 
   const formatStage = (stage) => {
     return stage.split('_').map(word => 
@@ -88,13 +89,24 @@ export default function CandidatesPage() {
   const handleSaveCandidate = (updatedCandidate) => {
     // In a real app, this would save to the database
     console.log('Saving candidate:', updatedCandidate);
-    // You could update the local state here if needed
+    
+    // Update the candidate in the local state
+    setCandidates(prevCandidates => 
+      prevCandidates.map(candidate => 
+        candidate.id === updatedCandidate.id ? updatedCandidate : candidate
+      )
+    );
   };
 
   const handleAddCandidate = (newCandidate) => {
     // In a real app, this would save to the database
     console.log('Adding new candidate:', newCandidate);
-    // You could update the local state here if needed
+    
+    // Add the new candidate to the local state
+    setCandidates(prevCandidates => [...prevCandidates, newCandidate]);
+    
+    // Close the form
+    setIsAddCandidateOpen(false);
   };
 
   const handleAddCandidateClick = () => {
