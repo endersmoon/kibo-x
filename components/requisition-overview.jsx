@@ -50,21 +50,21 @@ export default function RequisitionOverview({ onSelectRequisition, requisitions,
   });
 
   return (
-    <div className="min-h-screen   p-3">
-      <div className="">
+    <div className="h-full overflow-auto p-6">
+      <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-4 gap-4">
             <div>
-              <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
+              <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-2">
                 Candidate Tracking System
               </h1>
-              <p className="text-lg text-gray-600 dark:text-gray-300">
+              <p className="text-base lg:text-lg text-gray-600 dark:text-gray-300">
                 Manage job requisitions and track candidates through the hiring
                 process
               </p>
             </div>
-            <div className="">
+            <div className="flex flex-col sm:flex-row gap-2">
               <ToggleGroup 
                 type="single" 
                 value={viewMode} 
@@ -265,22 +265,23 @@ export default function RequisitionOverview({ onSelectRequisition, requisitions,
           </div>
         ) : (
           <Card>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Position</TableHead>
-                  <TableHead>Department</TableHead>
-                  <TableHead>Location</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Priority</TableHead>
-                  <TableHead>Positions</TableHead>
-                  <TableHead>Hiring Manager</TableHead>
-                  <TableHead>Recruiter</TableHead>
-                  <TableHead>Target Start</TableHead>
-                  <TableHead>Candidates</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
+            <div className="overflow-auto max-h-[70vh]">
+              <Table>
+                <TableHeader className="sticky top-0 bg-background">
+                  <TableRow>
+                    <TableHead className="whitespace-nowrap">Position</TableHead>
+                    <TableHead className="whitespace-nowrap">Department</TableHead>
+                    <TableHead className="whitespace-nowrap">Location</TableHead>
+                    <TableHead className="whitespace-nowrap">Status</TableHead>
+                    <TableHead className="whitespace-nowrap">Priority</TableHead>
+                    <TableHead className="whitespace-nowrap">Positions</TableHead>
+                    <TableHead className="whitespace-nowrap">Hiring Manager</TableHead>
+                    <TableHead className="whitespace-nowrap">Recruiter</TableHead>
+                    <TableHead className="whitespace-nowrap">Target Start</TableHead>
+                    <TableHead className="whitespace-nowrap">Candidates</TableHead>
+                    <TableHead className="whitespace-nowrap">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
               <TableBody>
                 {filteredRequisitions.map((requisition) => {
                   const stats = getRequisitionStats(requisition.id, candidates, requisitions);
@@ -291,11 +292,11 @@ export default function RequisitionOverview({ onSelectRequisition, requisitions,
                       className="cursor-pointer"
                       onClick={() => onSelectRequisition(requisition)}
                     >
-                      <TableCell className="font-medium">
+                      <TableCell className="font-medium min-w-[180px]">
                         {requisition.title}
                       </TableCell>
-                      <TableCell>{requisition.department}</TableCell>
-                      <TableCell>{requisition.location}</TableCell>
+                      <TableCell className="min-w-[120px]">{requisition.department}</TableCell>
+                      <TableCell className="min-w-[120px]">{requisition.location}</TableCell>
                       <TableCell>
                         {getStatusBadge(requisition.status)}
                       </TableCell>
@@ -331,7 +332,8 @@ export default function RequisitionOverview({ onSelectRequisition, requisitions,
                   );
                 })}
               </TableBody>
-            </Table>
+              </Table>
+            </div>
           </Card>
         )}
 

@@ -89,7 +89,7 @@ export default function CandidatesPage() {
   };
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="h-full overflow-auto p-6">
       <div className="mb-6">
         <h1 className="text-3xl font-bold tracking-tight">All Candidates</h1>
         <p className="text-muted-foreground">
@@ -198,20 +198,20 @@ export default function CandidatesPage() {
         <CardHeader>
           <CardTitle>Candidates ({filteredCandidates.length})</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
+        <CardContent className="p-0">
+          <div className="overflow-auto max-h-[60vh] border-t">
             <Table>
-              <TableHeader>
+              <TableHeader className="sticky top-0 bg-background">
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Position</TableHead>
-                  <TableHead>Stage</TableHead>
-                  <TableHead>Priority</TableHead>
-                  <TableHead>Experience</TableHead>
-                  <TableHead>Location</TableHead>
-                  <TableHead>Contact</TableHead>
-                  <TableHead>Applied</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead className="whitespace-nowrap">Name</TableHead>
+                  <TableHead className="whitespace-nowrap">Position</TableHead>
+                  <TableHead className="whitespace-nowrap">Stage</TableHead>
+                  <TableHead className="whitespace-nowrap">Priority</TableHead>
+                  <TableHead className="whitespace-nowrap">Experience</TableHead>
+                  <TableHead className="whitespace-nowrap">Location</TableHead>
+                  <TableHead className="whitespace-nowrap">Contact</TableHead>
+                  <TableHead className="whitespace-nowrap">Applied</TableHead>
+                  <TableHead className="whitespace-nowrap">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -221,19 +221,19 @@ export default function CandidatesPage() {
                     className="hover:bg-muted/50 cursor-pointer"
                     onClick={() => handleCandidateClick(candidate)}
                   >
-                    <TableCell>
+                    <TableCell className="min-w-[200px]">
                       <div className="flex flex-col">
                         <span className="font-medium">
                           {candidate.first_name} {candidate.last_name}
                         </span>
-                        <span className="text-sm text-muted-foreground">
+                        <span className="text-sm text-muted-foreground truncate">
                           {candidate.current_title} at {candidate.current_company}
                         </span>
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="min-w-[180px]">
                       <div className="flex flex-col">
-                        <span className="font-medium">{candidate.requisition_title}</span>
+                        <span className="font-medium truncate">{candidate.requisition_title}</span>
                         <span className="text-sm text-muted-foreground">
                           {candidate.requisition_department}
                         </span>
@@ -258,13 +258,13 @@ export default function CandidatesPage() {
                         <span className="text-sm">{candidate.location}</span>
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="min-w-[200px]">
                       <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-1">
-                          <Mail className="h-3 w-3 text-muted-foreground" />
+                          <Mail className="h-3 w-3 text-muted-foreground flex-shrink-0" />
                           <a 
                             href={`mailto:${candidate.email}`}
-                            className="text-sm text-blue-600 hover:underline"
+                            className="text-sm text-blue-600 hover:underline truncate"
                             onClick={(e) => e.stopPropagation()}
                           >
                             {candidate.email}
@@ -272,7 +272,7 @@ export default function CandidatesPage() {
                         </div>
                         {candidate.phone && (
                           <div className="flex items-center gap-1">
-                            <Phone className="h-3 w-3 text-muted-foreground" />
+                            <Phone className="h-3 w-3 text-muted-foreground flex-shrink-0" />
                             <a 
                               href={`tel:${candidate.phone}`}
                               className="text-sm text-blue-600 hover:underline"
@@ -321,12 +321,12 @@ export default function CandidatesPage() {
                 ))}
               </TableBody>
             </Table>
-            {filteredCandidates.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground">
-                No candidates found matching the selected filters.
-              </div>
-            )}
           </div>
+          {filteredCandidates.length === 0 && (
+            <div className="text-center py-8 text-muted-foreground">
+              No candidates found matching the selected filters.
+            </div>
+          )}
         </CardContent>
       </Card>
 

@@ -44,7 +44,7 @@ export function AppSidebar() {
   const pathname = usePathname();
 
   return (
-    <Sidebar>
+    <Sidebar className="h-screen  flex-shrink-0">
       <SidebarHeader>
         <div className="px-4 py-2">
           <h2 className="text-lg font-semibold tracking-tight">Kibo-X</h2>
@@ -81,17 +81,19 @@ export function AppSidebar() {
 
 export function SidebarLayout({ children }) {
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <main className="flex-1">
-        <div className="flex h-16 items-center gap-4 border-b bg-background px-6">
-          <SidebarTrigger />
-          <div className="flex-1" />
-        </div>
-        <div className="flex-1">
-          {children}
-        </div>
-      </main>
-    </SidebarProvider>
+    <div className="h-screen w-screen overflow-hidden">
+      <SidebarProvider>
+        <AppSidebar />
+        <main className="flex-1 h-screen overflow-hidden flex flex-col">
+          <div className="flex h-16 items-center gap-4 border-b bg-background ">
+            <SidebarTrigger />
+            <div className="flex-1" />
+          </div>
+          <div className="flex-1 overflow-auto">
+            {children}
+          </div>
+        </main>
+      </SidebarProvider>
+    </div>
   );
 }
