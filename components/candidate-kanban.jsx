@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
   KanbanBoardProvider,
   KanbanBoard,
@@ -20,22 +21,21 @@ import { Button } from "@/components/ui/button";
 import {
   getPriorityBadge,
 } from "@/lib/data";
+import {
+  candidatesByRequisitionAtom,
+  updateCandidatesAtom,
+  openAddCandidateModalAtom
+} from "@/lib/atoms";
 
 export default function CandidateKanban({
   requisition,
   onCandidateClick,
   onBack,
-  candidates: allCandidates,
 }) {
-  const [candidates, setCandidates] = useState([]);
-
-  useEffect(() => {
-    // Load candidates for this requisition
-    const requisitionCandidates = allCandidates.filter(
-      candidate => candidate.requisition_id === requisition.id
-    );
-    setCandidates(requisitionCandidates);
-  }, [requisition.id, allCandidates]);
+  // Get candidates for this requisition from global state
+  const candidates = useAtomValue(candidatesByRequisitionAtom);
+  const updateCandidates = useSetAtom(updateCandidatesAtom);
+  const openAddCandidateModal = useSetAtom(openAddCandidateModalAtom);
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -71,10 +71,7 @@ export default function CandidateKanban({
     );
   };
 
-  // Handle drag and drop between stages
-  const updateCandidateData = (newCandidates) => {
-    setCandidates(newCandidates);
-  };
+
 
   // Helper function to determine if we should create an interview record
   const shouldCreateInterview = (currentStageId, newStageId, existingInterviews = []) => {
@@ -137,7 +134,7 @@ export default function CandidateKanban({
       return candidate;
     });
     
-    updateCandidateData(updatedCandidates);
+    updateCandidates(updatedCandidates);
   };
 
   const handleDropOverListItem = (data, dropDirection, targetCandidateId) => {
@@ -187,7 +184,7 @@ export default function CandidateKanban({
     const newCandidates = [...filteredCandidates];
     newCandidates.splice(insertIndex, 0, updatedCandidate);
 
-    updateCandidateData(newCandidates);
+    updateCandidates(newCandidates);
   };
 
   return (
@@ -210,7 +207,7 @@ export default function CandidateKanban({
               </div>
             </div>
             <Button 
-              onClick={() => window.dispatchEvent(new CustomEvent('openAddCandidate', { detail: { requisition } }))}
+              onClick={() => openAddCandidateModal(requisition)}
             >
               + Add New Candidate
             </Button>

@@ -1,74 +1,102 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import RequisitionOverview from "@/components/requisition-overview";
 import CandidateKanban from "@/components/candidate-kanban";
 import CandidateModal from "@/components/candidate-modal";
 import AddRequisitionForm from "@/components/add-requisition-form";
 import AddCandidateForm from "@/components/add-candidate-form";
 import { useJsLoaded } from "@/lib/use-js-loaded";
-import { sampleRequisitions, sampleCandidates } from "@/lib/data";
+import {
+  currentViewAtom,
+  selectedRequisitionAtom,
+  selectedCandidateAtom,
+  candidateModalOpenAtom,
+  addRequisitionModalOpenAtom,
+  addCandidateModalOpenAtom,
+  selectedRequisitionForAddAtom,
+  selectRequisitionAtom,
+  backToOverviewAtom,
+  openCandidateModalAtom,
+  closeCandidateModalAtom,
+  openAddRequisitionModalAtom,
+  closeAddRequisitionModalAtom,
+  openAddCandidateModalAtom,
+  closeAddCandidateModalAtom,
+  addRequisitionAtom,
+  addCandidateAtom,
+  updateCandidateAtom,
+  requisitionsAtom,
+  candidatesAtom
+} from "@/lib/atoms";
 
 export default function Home() {
-  const [currentView, setCurrentView] = useState("overview"); // 'overview' or 'kanban'
-  const [selectedRequisition, setSelectedRequisition] = useState(null);
-  const [selectedCandidate, setSelectedCandidate] = useState(null);
-  const [isCandidateModalOpen, setIsCandidateModalOpen] = useState(false);
-  const [isAddRequisitionOpen, setIsAddRequisitionOpen] = useState(false);
-  const [isAddCandidateOpen, setIsAddCandidateOpen] = useState(false);
-  const [requisitions, setRequisitions] = useState(sampleRequisitions);
-  const [candidates, setCandidates] = useState(sampleCandidates);
+  // Jotai atoms
+  const currentView = useAtomValue(currentViewAtom);
+  const selectedRequisition = useAtomValue(selectedRequisitionAtom);
+  const selectedCandidate = useAtomValue(selectedCandidateAtom);
+  const isCandidateModalOpen = useAtomValue(candidateModalOpenAtom);
+  const isAddRequisitionOpen = useAtomValue(addRequisitionModalOpenAtom);
+  const isAddCandidateOpen = useAtomValue(addCandidateModalOpenAtom);
+  const selectedRequisitionForAdd = useAtomValue(selectedRequisitionForAddAtom);
+  const requisitions = useAtomValue(requisitionsAtom);
+  const candidates = useAtomValue(candidatesAtom);
+  
+  // Action atoms
+  const selectRequisition = useSetAtom(selectRequisitionAtom);
+  const backToOverview = useSetAtom(backToOverviewAtom);
+  const openCandidateModal = useSetAtom(openCandidateModalAtom);
+  const closeCandidateModal = useSetAtom(closeCandidateModalAtom);
+  const openAddRequisitionModal = useSetAtom(openAddRequisitionModalAtom);
+  const closeAddRequisitionModal = useSetAtom(closeAddRequisitionModalAtom);
+  const openAddCandidateModal = useSetAtom(openAddCandidateModalAtom);
+  const closeAddCandidateModal = useSetAtom(closeAddCandidateModalAtom);
+  const addRequisition = useSetAtom(addRequisitionAtom);
+  const addCandidate = useSetAtom(addCandidateAtom);
+  const updateCandidate = useSetAtom(updateCandidateAtom);
+  
   const jsLoaded = useJsLoaded();
 
   const handleSelectRequisition = (requisition) => {
-    setSelectedRequisition(requisition);
-    setCurrentView("kanban");
+    selectRequisition(requisition);
   };
 
   const handleBackToOverview = () => {
-    setCurrentView("overview");
-    setSelectedRequisition(null);
+    backToOverview();
   };
 
   const handleCandidateClick = (candidate) => {
-    setSelectedCandidate(candidate);
-    setIsCandidateModalOpen(true);
+    openCandidateModal(candidate);
   };
 
   const handleCandidateModalClose = () => {
-    setIsCandidateModalOpen(false);
-    setSelectedCandidate(null);
+    closeCandidateModal();
   };
 
   const handleCandidateSave = (updatedCandidate) => {
-    // Update the candidate in the local state
-    setCandidates(prev => 
-      prev.map(candidate => 
-        candidate.id === updatedCandidate.id ? updatedCandidate : candidate
-      )
-    );
+    updateCandidate(updatedCandidate);
     console.log("Saving candidate:", updatedCandidate);
   };
 
   const handleAddRequisition = (newRequisition) => {
-    setRequisitions(prev => [...prev, newRequisition]);
+    addRequisition(newRequisition);
     console.log("Adding requisition:", newRequisition);
   };
 
   const handleAddCandidate = (newCandidate) => {
-    setCandidates(prev => [...prev, newCandidate]);
+    addCandidate(newCandidate);
     console.log("Adding candidate:", newCandidate);
   };
 
   // Event listeners for custom events
   useEffect(() => {
     const handleOpenAddRequisition = () => {
-      setIsAddRequisitionOpen(true);
+      openAddRequisitionModal();
     };
 
     const handleOpenAddCandidate = (event) => {
-      setSelectedRequisition(event.detail.requisition);
-      setIsAddCandidateOpen(true);
+      openAddCandidateModal(event.detail.requisition);
     };
 
     window.addEventListener('openAddRequisition', handleOpenAddRequisition);
@@ -78,7 +106,7 @@ export default function Home() {
       window.removeEventListener('openAddRequisition', handleOpenAddRequisition);
       window.removeEventListener('openAddCandidate', handleOpenAddCandidate);
     };
-  }, []);
+  }, [openAddRequisitionModal, openAddCandidateModal]);
 
   // Don't render anything until JavaScript has loaded to prevent hydration issues
   if (!jsLoaded) {
@@ -133,16 +161,16 @@ export default function Home() {
       {/* Add Requisition Form */}
       <AddRequisitionForm
         isOpen={isAddRequisitionOpen}
-        onClose={() => setIsAddRequisitionOpen(false)}
+        onClose={closeAddRequisitionModal}
         onSave={handleAddRequisition}
       />
 
       {/* Add Candidate Form */}
       <AddCandidateForm
         isOpen={isAddCandidateOpen}
-        onClose={() => setIsAddCandidateOpen(false)}
+        onClose={closeAddCandidateModal}
         onSave={handleAddCandidate}
-        requisition={selectedRequisition}
+        requisition={selectedRequisitionForAdd}
       />
     </>
   );

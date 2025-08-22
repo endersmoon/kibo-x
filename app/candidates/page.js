@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import {
   Table,
   TableBody,
@@ -12,30 +13,48 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { sampleCandidates, sampleRequisitions, getPriorityBadge } from '@/lib/data';
+import { getPriorityBadge } from '@/lib/data';
 import { ExternalLink, Phone, Mail, MapPin, Plus } from 'lucide-react';
 import CandidateModal from '@/components/candidate-modal';
 import AddCandidateForm from '@/components/add-candidate-form';
+import {
+  candidatesWithRequisitionInfoAtom,
+  candidateStatsAtom,
+  requisitionsAtom,
+  selectedCandidateAtom,
+  candidateModalOpenAtom,
+  addCandidateModalOpenAtom,
+  selectedRequisitionForAddAtom,
+  openCandidateModalAtom,
+  closeCandidateModalAtom,
+  openAddCandidateModalAtom,
+  closeAddCandidateModalAtom,
+  addCandidateAtom,
+  updateCandidateAtom
+} from '@/lib/atoms';
 
 export default function CandidatesPage() {
+  // Local state for filters
   const [selectedPriority, setSelectedPriority] = useState('all');
   const [selectedStage, setSelectedStage] = useState('all');
   const [selectedRequisition, setSelectedRequisition] = useState('all');
-  const [selectedCandidate, setSelectedCandidate] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isAddCandidateOpen, setIsAddCandidateOpen] = useState(false);
-  const [selectedRequisitionForAdd, setSelectedRequisitionForAdd] = useState(null);
-  const [candidates, setCandidates] = useState(sampleCandidates);
-
-  // Get all candidates with requisition info
-  const candidatesWithRequisition = candidates.map(candidate => {
-    const requisition = sampleRequisitions.find(req => req.id === candidate.requisition_id);
-    return {
-      ...candidate,
-      requisition_title: requisition?.title || 'Unknown',
-      requisition_department: requisition?.department || 'Unknown',
-    };
-  });
+  
+  // Jotai atoms
+  const candidatesWithRequisition = useAtomValue(candidatesWithRequisitionInfoAtom);
+  const candidateStats = useAtomValue(candidateStatsAtom);
+  const requisitions = useAtomValue(requisitionsAtom);
+  const selectedCandidate = useAtomValue(selectedCandidateAtom);
+  const isModalOpen = useAtomValue(candidateModalOpenAtom);
+  const isAddCandidateOpen = useAtomValue(addCandidateModalOpenAtom);
+  const selectedRequisitionForAdd = useAtomValue(selectedRequisitionForAddAtom);
+  
+  // Action atoms
+  const openCandidateModal = useSetAtom(openCandidateModalAtom);
+  const closeCandidateModal = useSetAtom(closeCandidateModalAtom);
+  const openAddCandidateModal = useSetAtom(openAddCandidateModalAtom);
+  const closeAddCandidateModal = useSetAtom(closeAddCandidateModalAtom);
+  const addCandidate = useSetAtom(addCandidateAtom);
+  const updateCandidate = useSetAtom(updateCandidateAtom);
 
   // Filter candidates
   const filteredCandidates = candidatesWithRequisition.filter(candidate => {
@@ -47,8 +66,8 @@ export default function CandidatesPage() {
   });
 
   // Get unique values for filters
-  const priorities = [...new Set(candidates.map(c => c.priority))];
-  const stages = [...new Set(candidates.map(c => c.current_stage))];
+  const priorities = [...new Set(candidatesWithRequisition.map(c => c.priority))];
+  const stages = [...new Set(candidatesWithRequisition.map(c => c.current_stage))];
 
   const formatStage = (stage) => {
     return stage.split('_').map(word => 
@@ -77,48 +96,36 @@ export default function CandidatesPage() {
   };
 
   const handleCandidateClick = (candidate) => {
-    setSelectedCandidate(candidate);
-    setIsModalOpen(true);
+    openCandidateModal(candidate);
   };
 
   const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setSelectedCandidate(null);
+    closeCandidateModal();
   };
 
   const handleSaveCandidate = (updatedCandidate) => {
     // In a real app, this would save to the database
     console.log('Saving candidate:', updatedCandidate);
     
-    // Update the candidate in the local state
-    setCandidates(prevCandidates => 
-      prevCandidates.map(candidate => 
-        candidate.id === updatedCandidate.id ? updatedCandidate : candidate
-      )
-    );
+    updateCandidate(updatedCandidate);
   };
 
   const handleAddCandidate = (newCandidate) => {
     // In a real app, this would save to the database
     console.log('Adding new candidate:', newCandidate);
     
-    // Add the new candidate to the local state
-    setCandidates(prevCandidates => [...prevCandidates, newCandidate]);
-    
-    // Close the form
-    setIsAddCandidateOpen(false);
+    addCandidate(newCandidate);
   };
 
   const handleAddCandidateClick = () => {
     // If a specific requisition is filtered, use that as default
     if (selectedRequisition !== 'all') {
-      const requisition = sampleRequisitions.find(req => req.id === selectedRequisition);
-      setSelectedRequisitionForAdd(requisition);
+      const requisition = requisitions.find(req => req.id === selectedRequisition);
+      openAddCandidateModal(requisition);
     } else {
       // Default to the first requisition if none is selected
-      setSelectedRequisitionForAdd(sampleRequisitions[0]);
+      openAddCandidateModal(requisitions[0]);
     }
-    setIsAddCandidateOpen(true);
   };
 
   return (
@@ -154,9 +161,7 @@ export default function CandidatesPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {filteredCandidates.filter(c => 
-                ['phone_interview', 'technical_interview', 'final_interview', 'case_study', 'design_interview', 'stakeholder_interview', 'team_interview'].includes(c.current_stage)
-              ).length}
+              {candidateStats.inInterview}
             </div>
           </CardContent>
         </Card>
@@ -166,7 +171,7 @@ export default function CandidatesPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {filteredCandidates.filter(c => c.current_stage === 'offer').length}
+              {candidateStats.offersExtended}
             </div>
           </CardContent>
         </Card>
@@ -176,7 +181,7 @@ export default function CandidatesPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {filteredCandidates.filter(c => c.current_stage === 'hired').length}
+              {candidateStats.hired}
             </div>
           </CardContent>
         </Card>
@@ -197,7 +202,7 @@ export default function CandidatesPage() {
                 className="px-3 py-2 border border-input bg-background rounded-md text-sm"
               >
                 <option value="all">All Requisitions</option>
-                {sampleRequisitions.map(req => (
+                {requisitions.map(req => (
                   <option key={req.id} value={req.id}>{req.title}</option>
                 ))}
               </select>
@@ -375,7 +380,7 @@ export default function CandidatesPage() {
       {selectedCandidate && (
         <CandidateModal
           candidate={selectedCandidate}
-          requisition={sampleRequisitions.find(req => req.id === selectedCandidate.requisition_id)}
+          requisition={selectedCandidate?.requisition}
           isOpen={isModalOpen}
           onClose={handleCloseModal}
           onSave={handleSaveCandidate}
@@ -386,9 +391,9 @@ export default function CandidatesPage() {
       {selectedRequisitionForAdd && (
         <AddCandidateForm
           requisition={selectedRequisitionForAdd}
-          allRequisitions={sampleRequisitions}
+          allRequisitions={requisitions}
           isOpen={isAddCandidateOpen}
-          onClose={() => setIsAddCandidateOpen(false)}
+          onClose={closeAddCandidateModal}
           onSave={handleAddCandidate}
         />
       )}

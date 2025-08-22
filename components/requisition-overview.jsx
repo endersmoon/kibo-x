@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useAtomValue, useSetAtom } from "jotai";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -12,10 +13,18 @@ import {
   getPriorityBadge,
   REQUISITION_STATUS,
 } from "@/lib/data";
+import {
+  requisitionStatsAtom,
+  openAddRequisitionModalAtom
+} from "@/lib/atoms";
 
 export default function RequisitionOverview({ onSelectRequisition, requisitions, candidates }) {
   const [activeTab, setActiveTab] = useState("all");
   const [viewMode, setViewMode] = useState("table"); // "card" or "table"
+  
+  // Jotai atoms
+  const requisitionStats = useAtomValue(requisitionStatsAtom);
+  const openAddRequisitionModal = useSetAtom(openAddRequisitionModalAtom);
 
   const getStatusBadge = (status) => {
     const colors = {
@@ -79,7 +88,7 @@ export default function RequisitionOverview({ onSelectRequisition, requisitions,
                 </ToggleGroupItem>
               </ToggleGroup>
               <Button 
-                onClick={() => window.dispatchEvent(new CustomEvent('openAddRequisition'))}
+                onClick={() => openAddRequisitionModal()}
                 size="lg"
               >
                 + Add New Requisition
@@ -143,7 +152,7 @@ export default function RequisitionOverview({ onSelectRequisition, requisitions,
         {viewMode === "card" ? (
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
             {filteredRequisitions.map((requisition) => {
-              const stats = getRequisitionStats(requisition.id, candidates, requisitions);
+              const stats = requisitionStats.find(rs => rs.requisition.id === requisition.id)?.stats;
 
               return (
                 <Card
@@ -284,7 +293,7 @@ export default function RequisitionOverview({ onSelectRequisition, requisitions,
                 </TableHeader>
               <TableBody>
                 {filteredRequisitions.map((requisition) => {
-                  const stats = getRequisitionStats(requisition.id, candidates, requisitions);
+                  const stats = requisitionStats.find(rs => rs.requisition.id === requisition.id)?.stats;
                   
                   return (
                     <TableRow
