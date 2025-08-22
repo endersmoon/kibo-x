@@ -14,11 +14,14 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { sampleCandidates, sampleRequisitions, getPriorityBadge } from '@/lib/data';
 import { ExternalLink, Phone, Mail, MapPin } from 'lucide-react';
+import CandidateModal from '@/components/candidate-modal';
 
 export default function CandidatesPage() {
   const [selectedPriority, setSelectedPriority] = useState('all');
   const [selectedStage, setSelectedStage] = useState('all');
   const [selectedRequisition, setSelectedRequisition] = useState('all');
+  const [selectedCandidate, setSelectedCandidate] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Get all candidates with requisition info
   const candidatesWithRequisition = sampleCandidates.map(candidate => {
@@ -67,6 +70,22 @@ export default function CandidatesPage() {
       rejected: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
     };
     return colors[stage] || 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
+  };
+
+  const handleCandidateClick = (candidate) => {
+    setSelectedCandidate(candidate);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedCandidate(null);
+  };
+
+  const handleSaveCandidate = (updatedCandidate) => {
+    // In a real app, this would save to the database
+    console.log('Saving candidate:', updatedCandidate);
+    // You could update the local state here if needed
   };
 
   return (
@@ -197,7 +216,11 @@ export default function CandidatesPage() {
               </TableHeader>
               <TableBody>
                 {filteredCandidates.map((candidate) => (
-                  <TableRow key={candidate.id} className="hover:bg-muted/50">
+                  <TableRow 
+                    key={candidate.id} 
+                    className="hover:bg-muted/50 cursor-pointer"
+                    onClick={() => handleCandidateClick(candidate)}
+                  >
                     <TableCell>
                       <div className="flex flex-col">
                         <span className="font-medium">
@@ -242,6 +265,7 @@ export default function CandidatesPage() {
                           <a 
                             href={`mailto:${candidate.email}`}
                             className="text-sm text-blue-600 hover:underline"
+                            onClick={(e) => e.stopPropagation()}
                           >
                             {candidate.email}
                           </a>
@@ -252,6 +276,7 @@ export default function CandidatesPage() {
                             <a 
                               href={`tel:${candidate.phone}`}
                               className="text-sm text-blue-600 hover:underline"
+                              onClick={(e) => e.stopPropagation()}
                             >
                               {candidate.phone}
                             </a>
@@ -270,7 +295,10 @@ export default function CandidatesPage() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => window.open(candidate.linkedin_url, '_blank')}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              window.open(candidate.linkedin_url, '_blank');
+                            }}
                           >
                             <ExternalLink className="h-3 w-3" />
                           </Button>
@@ -279,7 +307,10 @@ export default function CandidatesPage() {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => window.open(candidate.portfolio_url, '_blank')}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              window.open(candidate.portfolio_url, '_blank');
+                            }}
                           >
                             Portfolio
                           </Button>
@@ -298,6 +329,17 @@ export default function CandidatesPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Candidate Modal */}
+      {selectedCandidate && (
+        <CandidateModal
+          candidate={selectedCandidate}
+          requisition={sampleRequisitions.find(req => req.id === selectedCandidate.requisition_id)}
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          onSave={handleSaveCandidate}
+        />
+      )}
     </div>
   );
 }

@@ -15,7 +15,7 @@ import {
 
 export default function RequisitionOverview({ onSelectRequisition, requisitions, candidates }) {
   const [activeTab, setActiveTab] = useState("all");
-  const [viewMode, setViewMode] = useState("card"); // "card" or "table"
+  const [viewMode, setViewMode] = useState("table"); // "card" or "table"
 
   const getStatusBadge = (status) => {
     const colors = {
