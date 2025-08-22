@@ -4,6 +4,7 @@ import { SidebarLayout } from "@/components/navigation";
 import { JotaiProvider } from "@/components/providers/jotai-provider";
 import { FirebaseProvider } from "@/components/firebase-provider";
 import { AuthProvider } from "@/components/auth-provider";
+import { AuthGuard } from "@/components/auth-guard";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,9 +31,11 @@ export default function RootLayout({ children }) {
         <JotaiProvider>
           <AuthProvider>
             <FirebaseProvider>
-              <SidebarLayout>
-                {children}
-              </SidebarLayout>
+              <AuthGuard>
+                <SidebarLayout>
+                  {children}
+                </SidebarLayout>
+              </AuthGuard>
             </FirebaseProvider>
           </AuthProvider>
         </JotaiProvider>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import { useSetAtom, useAtomValue } from 'jotai';
 import {
   initializeAuthAtom,
@@ -9,9 +10,11 @@ import {
 } from '@/lib/auth-atoms';
 
 export function AuthProvider({ children }) {
+  const pathname = usePathname();
   const initializeAuth = useSetAtom(initializeAuthAtom);
   const authStatus = useAtomValue(authStatusAtom);
   const user = useAtomValue(currentUserAtom);
+  const isLoginPage = pathname === '/login';
 
   useEffect(() => {
     // Initialize authentication when the component mounts
@@ -41,7 +44,7 @@ export function AuthProvider({ children }) {
   return (
     <div>
       {/* Email verification reminder */}
-      {user && authStatus === 'unverified' && (
+      {user && authStatus === 'unverified' && !isLoginPage && (
         <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-2 text-sm">
           ⚠️ Please verify your email address to secure your account.
         </div>

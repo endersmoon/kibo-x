@@ -82,6 +82,17 @@ export function AppSidebar() {
 }
 
 export function SidebarLayout({ children }) {
+  const pathname = usePathname();
+  const isLoginPage = pathname === '/login';
+
+  if (isLoginPage) {
+    return (
+      <div className="h-screen w-screen overflow-hidden">
+        {children}
+      </div>
+    );
+  }
+
   return (
     <div className="h-screen w-screen overflow-hidden">
       <SidebarProvider>
