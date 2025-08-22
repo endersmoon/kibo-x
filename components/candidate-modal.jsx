@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from "react";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -100,10 +101,10 @@ export default function CandidateModal({
   const currentStage = getCurrentStageInfo();
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-bold flex items-center gap-3">
+    <Drawer open={isOpen} onOpenChange={onClose} direction="right">
+              <DrawerContent className="p-3 h-full overflow-y-auto w-auto min-w-[800px] max-w-[90vw]">
+        <DrawerHeader>
+          <DrawerTitle className="text-2xl font-bold flex items-center gap-3">
             <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
               <span className="text-lg font-medium text-white">
                 {candidate.first_name.charAt(0)}
@@ -111,14 +112,14 @@ export default function CandidateModal({
               </span>
             </div>
             {candidate.first_name} {candidate.last_name}
-          </DialogTitle>
-          <DialogDescription>
+          </DrawerTitle>
+          <DrawerDescription>
             Candidate for {requisition?.title} • {candidate.current_title} at{" "}
             {candidate.current_company}
-          </DialogDescription>
-        </DialogHeader>
+          </DrawerDescription>
+        </DrawerHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-6 w-full">
           {/* Status and Priority */}
           <div className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
             <div className="flex items-center gap-2">
@@ -336,13 +337,13 @@ export default function CandidateModal({
           </Card>
         </div>
 
-        <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={onClose}>
-            Close
-          </Button>
+        <DrawerFooter className="gap-2">
           <Button onClick={handleSave}>Save Changes</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          <DrawerClose asChild>
+            <Button variant="outline">Close</Button>
+          </DrawerClose>
+        </DrawerFooter>
+      </DrawerContent>
+    </Drawer>
   );
 }

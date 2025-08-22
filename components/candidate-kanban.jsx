@@ -18,7 +18,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  getCandidatesByRequisition,
   getPriorityBadge,
 } from "@/lib/data";
 
@@ -26,14 +25,17 @@ export default function CandidateKanban({
   requisition,
   onCandidateClick,
   onBack,
+  candidates: allCandidates,
 }) {
   const [candidates, setCandidates] = useState([]);
 
   useEffect(() => {
     // Load candidates for this requisition
-    const requisitionCandidates = getCandidatesByRequisition(requisition.id);
+    const requisitionCandidates = allCandidates.filter(
+      candidate => candidate.requisition_id === requisition.id
+    );
     setCandidates(requisitionCandidates);
-  }, [requisition.id]);
+  }, [requisition.id, allCandidates]);
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -132,18 +134,25 @@ export default function CandidateKanban({
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center gap-4 mb-4">
-            <Button variant="outline" onClick={onBack}>
-              ← Back to Requisitions
-            </Button>
-            <div className="flex items-center gap-2">
-              <span
-                className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getPriorityBadge(requisition.priority)}`}
-              >
-                {requisition.priority}
-              </span>
-              <Badge variant="secondary">{requisition.department}</Badge>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-4">
+              <Button variant="outline" onClick={onBack}>
+                ← Back to Requisitions
+              </Button>
+              <div className="flex items-center gap-2">
+                <span
+                  className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getPriorityBadge(requisition.priority)}`}
+                >
+                  {requisition.priority}
+                </span>
+                <Badge variant="secondary">{requisition.department}</Badge>
+              </div>
             </div>
+            <Button 
+              onClick={() => window.dispatchEvent(new CustomEvent('openAddCandidate', { detail: { requisition } }))}
+            >
+              + Add New Candidate
+            </Button>
           </div>
 
           <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
